@@ -1,0 +1,25 @@
+{
+    "items": [
+        {
+            "id": "apple",
+            "german": "Der Apfel",
+            "english": "The Apple",
+            "sentence": "Das ist ein roter Apfel.",
+            "audioFile": "apple_audio"
+        },
+        {
+            "id": "beer",
+            "german": "das Bier",
+            "english": "The Beer",
+            "sentence": "Ich trinke gerne Bier.",
+            "audioFile": "beer_audio"
+        },
+        {
+            "id": "glass",
+            "german": "das Glas",
+            "english": "The Glass",
+            "sentence": "Ich hätte gerne ein Glas Kaffee.",
+            "audioFile": "glass_audio"
+        }
+    ]
+}
