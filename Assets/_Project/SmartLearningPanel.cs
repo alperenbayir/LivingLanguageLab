@@ -149,12 +149,12 @@ public class SmartLearningPanel : MonoBehaviour
 
         if (accuracy > 80)
         {
-            resultText.text = $"✅ Correct! (%{accuracy})";
+            resultText.text = $"✅ Correct! ({accuracy}%)";
             resultText.color = Color.green;
         }
         else
         {
-            resultText.text = $"❌ Retry. (%{accuracy})";
+            resultText.text = $"❌ Retry. ({accuracy}%)";
             resultText.color = Color.red;
         }
         micButton.interactable = true;
