@@ -180,7 +180,7 @@ public class SmartLearningPanel : MonoBehaviour
 
         if (resultText)
         {
-            if (score > 60)
+            if (score > 70)
             {
                 resultText.text = $"Correct! ({score:F0}%)\nYou said: {spokenText}";
                 resultText.color = Color.green;
@@ -218,7 +218,7 @@ public class SmartLearningPanel : MonoBehaviour
         return similarity * 100.0f;
     }
 
-    int LevenshteinDistance(string s, string t)
+    int LevenshteinDistanceAlgorithm(string s, string t)
     {
         int n = s.Length;
         int m = t.Length;
