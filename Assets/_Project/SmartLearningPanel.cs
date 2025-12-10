@@ -4,9 +4,8 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor.VersionControl;
 
-// Classes to match JSON data
+// JSON Data Classes
 [System.Serializable]
 public class WordData
 {
@@ -26,59 +25,90 @@ public class WordList
 public class SmartLearningPanel : MonoBehaviour
 {
     [Header("UI Elements")]
-    public GameObject panelRoot; // The panel itself (open/close)
+    public GameObject panelRoot;
     public TextMeshProUGUI germanText;
     public TextMeshProUGUI englishText;
     public TextMeshProUGUI sentenceText;
     public TextMeshProUGUI resultText;
+
+    [Header("Buttons")]
     public Button speakerButton;
     public Button micButton;
+    public Button exitButton;
+
+    [Header("Article Colors")]
+    public Color derColor = Color.blue;   // Masculine
+    public Color dieColor = Color.red;    // Feminine
+    public Color dasColor = Color.green;  // Neuter
+    public Color defaultColor = Color.white; // Standard
+
     public AudioSource audioSource;
 
     private Dictionary<string, WordData> dataDictionary = new Dictionary<string, WordData>();
-    private WordData currentWord; // The currently selected word
+    private WordData currentWord;
 
     void Start()
     {
         LoadJSON();
-        panelRoot.SetActive(false); // Hidden at start
+
+        // Hide panel at start
+        if (panelRoot != null) panelRoot.SetActive(false);
+
+        // Setup Exit Button
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ClosePanel);
+        }
     }
 
-    // 1. LOAD JSON
+    public void ClosePanel()
+    {
+        if (panelRoot != null)
+            panelRoot.SetActive(false);
+    }
+
     void LoadJSON()
     {
         string path = Path.Combine(Application.streamingAssetsPath, "words.json");
-        if (File.Exists(path))
+        // Check if file exists (or if running in Editor)
+        if (File.Exists(path) || Application.isEditor)
         {
-            string jsonString = File.ReadAllText(path);
-            WordList loadedData = JsonUtility.FromJson<WordList>(jsonString);
-            foreach (var word in loadedData.items)
+            try
             {
-                dataDictionary.Add(word.id, word);
+                string jsonString = File.ReadAllText(path);
+                WordList loadedData = JsonUtility.FromJson<WordList>(jsonString);
+                foreach (var word in loadedData.items)
+                {
+                    if (!dataDictionary.ContainsKey(word.id))
+                        dataDictionary.Add(word.id, word);
+                }
             }
+            catch (System.Exception e) { Debug.LogWarning("JSON Error: " + e.Message); }
         }
-        else { Debug.LogError("JSON file not found!"); }
     }
 
-    // Updated ShowWord function
     public void ShowWord(string wordID)
     {
-        // If the panel was about to close (timer running), cancel it!
-        CancelInvoke("DeactivatePanel");
-
         if (dataDictionary.ContainsKey(wordID))
         {
             currentWord = dataDictionary[wordID];
 
-            // Fill UI elements
-            if (germanText) germanText.text = currentWord.german;
+            // Populate UI
+            if (germanText)
+            {
+                germanText.text = currentWord.german;
+                // Update color based on article
+                UpdateArticleColor(currentWord.german);
+            }
+
             if (englishText) englishText.text = currentWord.english;
             if (sentenceText) sentenceText.text = currentWord.sentence;
-            if (resultText) resultText.text = "";
+            if (resultText) resultText.text = ""; // Clear previous result
 
             if (panelRoot) panelRoot.SetActive(true);
 
-            // Button listeners
+            // Setup Listeners
             if (speakerButton)
             {
                 speakerButton.onClick.RemoveAllListeners();
@@ -92,71 +122,84 @@ public class SmartLearningPanel : MonoBehaviour
         }
     }
 
-    // Updated HidePanel function
-    public void HidePanel()
+    // Color Update Logic
+    void UpdateArticleColor(string text)
     {
-        // Do not close immediately! Wait 1 second.
-        // During this time, the user can still reach the button.
-        Invoke("DeactivatePanel", 4.0f);
+        // If text starts with "Der " -> Blue
+        if (text.StartsWith("Der "))
+        {
+            germanText.color = derColor;
+        }
+        // If text starts with "Die " -> Red
+        else if (text.StartsWith("Die "))
+        {
+            germanText.color = dieColor;
+        }
+        // If text starts with "Das " -> Green
+        else if (text.StartsWith("Das "))
+        {
+            germanText.color = dasColor;
+        }
+        // Otherwise -> White
+        else
+        {
+            germanText.color = defaultColor;
+        }
     }
 
-    // The actual function that closes the panel
-    void DeactivatePanel()
-    {
-        if (panelRoot) panelRoot.SetActive(false);
-    }
-
-    // 3. PLAY AUDIO (Speaker)
     void PlayAudio()
     {
         if (currentWord == null) return;
 
-        // 1. Get the audio file name from JSON (e.g. "apple_audio")
         string audioName = currentWord.audioFile;
-
-        // 2. Load audio from Resources folder
+        // Load from Resources folder
         AudioClip clip = Resources.Load<AudioClip>(audioName);
 
-        if (clip != null)
+        if (clip != null && audioSource != null)
         {
-            // 3. Play sound once
             audioSource.PlayOneShot(clip);
-            Debug.Log("🔊 Playing audio: " + audioName);
+            Debug.Log("Playing audio: " + audioName);
         }
         else
         {
-            Debug.LogError("❌ Audio file not found! Check 'Assets/Resources'. File name should be: " + audioName);
+            Debug.LogError("Audio file not found! Please check 'Assets/Resources'. File name should be: " + audioName);
         }
     }
 
-    // 4. MICROPHONE TEST (Simulation / Wizard of Oz)
-    // Real speech API integration is risky for presentation, so we simulate it.
     void StartMicTest()
     {
         StartCoroutine(SimulateSpeechRecognition());
     }
 
+    // Wizard of Oz Simulation
     IEnumerator SimulateSpeechRecognition()
     {
-        micButton.interactable = false;
-        resultText.text = "🎤 Listening...";
-        resultText.color = Color.yellow;
+        if (micButton) micButton.interactable = false;
 
-        yield return new WaitForSeconds(2.0f); // Fake listening for 2 seconds
-
-        // Generate a random accuracy value (in presentation, it will often be high)
-        int accuracy = Random.Range(75, 100);
-
-        if (accuracy > 80)
+        if (resultText)
         {
-            resultText.text = $"✅ Correct! ({accuracy}%)";
-            resultText.color = Color.green;
+            resultText.text = "Listening...";
+            resultText.color = Color.yellow;
         }
-        else
+
+        yield return new WaitForSeconds(2.0f); // Wait for 2 seconds
+
+        int accuracy = Random.Range(85, 100); // Random high accuracy
+
+        if (resultText)
         {
-            resultText.text = $"❌ Retry. ({accuracy}%)";
-            resultText.color = Color.red;
+            if (accuracy > 80)
+            {
+                resultText.text = $"Correct! ({accuracy}%)";
+                resultText.color = Color.green;
+            }
+            else
+            {
+                resultText.text = $"Try again. ({accuracy}%)";
+                resultText.color = Color.red;
+            }
         }
-        micButton.interactable = true;
+
+        if (micButton) micButton.interactable = true;
     }
 }
