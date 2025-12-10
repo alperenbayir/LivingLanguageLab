@@ -178,7 +178,7 @@ public class SmartLearningPanel : MonoBehaviour
         string jsonBody = $@"
         {{
         ""model"": ""llama3:latest"",
-        ""prompt"": ""Schreibe einen einfachen Satz zu '{currentWord.german}' für Deutschlerner bestehend aus Subjekt, Prädikat, Objekt.Maximal 7 Wörter. Der Satz muss '{currentWord.german}'. NUR der Satz."",
+        ""prompt"": ""Schreibe einen einfachen Satz zu '{currentWord.german}' für Deutschlerner bestehend aus Subjekt, dann Prädikat, dann Objekt. Maximal 7 Wörter. Der Satz muss '{currentWord.german}'. NUR der Satz."",
         ""stream"": false
         }}
         ";
