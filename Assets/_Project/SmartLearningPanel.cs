@@ -4,6 +4,8 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Oculus.Voice;             // Mikrofon icin
+using Meta.WitAi.TTS.Utilities; // Konusma (TTS) icin
 
 // JSON Data Classes
 [System.Serializable]
@@ -37,12 +39,14 @@ public class SmartLearningPanel : MonoBehaviour
     public Button exitButton;
 
     [Header("Article Colors")]
-    public Color derColor = Color.blue;   // Masculine
-    public Color dieColor = Color.red;    // Feminine
-    public Color dasColor = Color.green;  // Neuter
-    public Color defaultColor = Color.white; // Standard
+    public Color derColor = Color.blue;
+    public Color dieColor = Color.red;
+    public Color dasColor = Color.green;
+    public Color defaultColor = Color.white;
 
-    public AudioSource audioSource;
+    [Header("Voice AI (YENI)")]
+    public AppVoiceExperience voiceExperience; // Mikrofon (Dinleme)
+    public TTSSpeaker ttsSpeaker;              // Hoparlör (Konusma)
 
     private Dictionary<string, WordData> dataDictionary = new Dictionary<string, WordData>();
     private WordData currentWord;
@@ -51,10 +55,8 @@ public class SmartLearningPanel : MonoBehaviour
     {
         LoadJSON();
 
-        // Hide panel at start
         if (panelRoot != null) panelRoot.SetActive(false);
 
-        // Setup Exit Button
         if (exitButton != null)
         {
             exitButton.onClick.RemoveAllListeners();
@@ -71,7 +73,6 @@ public class SmartLearningPanel : MonoBehaviour
     void LoadJSON()
     {
         string path = Path.Combine(Application.streamingAssetsPath, "words.json");
-        // Check if file exists (or if running in Editor)
         if (File.Exists(path) || Application.isEditor)
         {
             try
@@ -94,21 +95,19 @@ public class SmartLearningPanel : MonoBehaviour
         {
             currentWord = dataDictionary[wordID];
 
-            // Populate UI
             if (germanText)
             {
                 germanText.text = currentWord.german;
-                // Update color based on article
                 UpdateArticleColor(currentWord.german);
             }
 
             if (englishText) englishText.text = currentWord.english;
             if (sentenceText) sentenceText.text = currentWord.sentence;
-            if (resultText) resultText.text = ""; // Clear previous result
+            if (resultText) resultText.text = "";
 
             if (panelRoot) panelRoot.SetActive(true);
 
-            // Setup Listeners
+            // Butonlari Bagla
             if (speakerButton)
             {
                 speakerButton.onClick.RemoveAllListeners();
@@ -122,84 +121,122 @@ public class SmartLearningPanel : MonoBehaviour
         }
     }
 
-    // Color Update Logic
     void UpdateArticleColor(string text)
     {
-        // If text starts with "Der " -> Blue
-        if (text.StartsWith("Der "))
-        {
-            germanText.color = derColor;
-        }
-        // If text starts with "Die " -> Red
-        else if (text.StartsWith("Die "))
-        {
-            germanText.color = dieColor;
-        }
-        // If text starts with "Das " -> Green
-        else if (text.StartsWith("Das "))
-        {
-            germanText.color = dasColor;
-        }
-        // Otherwise -> White
-        else
-        {
-            germanText.color = defaultColor;
-        }
+        if (text.StartsWith("Der ")) germanText.color = derColor;
+        else if (text.StartsWith("Die ")) germanText.color = dieColor;
+        else if (text.StartsWith("Das ")) germanText.color = dasColor;
+        else germanText.color = defaultColor;
     }
 
+    // --- YAPAY ZEKA KONUSMA (TTS) ---
     void PlayAudio()
     {
         if (currentWord == null) return;
+        string textToSpeak = currentWord.german;
 
-        string audioName = currentWord.audioFile;
-        // Load from Resources folder
-        AudioClip clip = Resources.Load<AudioClip>(audioName);
-
-        if (clip != null && audioSource != null)
+        if (ttsSpeaker != null)
         {
-            audioSource.PlayOneShot(clip);
-            Debug.Log("Playing audio: " + audioName);
+            Debug.Log("Konuşuluyor: " + textToSpeak);
+
+            // --- BURAYI DEGISTIR ---
+            // İsim vermeden sadece metni gönder.
+            // Wit.ai otomatik olarak varsayılan bir ses atayacaktır.
+            ttsSpeaker.Speak(textToSpeak);
         }
         else
         {
-            Debug.LogError("Audio file not found! Please check 'Assets/Resources'. File name should be: " + audioName);
+            Debug.LogError("HATA: TTS Speaker atanmamış!");
         }
     }
 
+    // --- SES TANIMA BASLATMA ---
     void StartMicTest()
     {
-        StartCoroutine(SimulateSpeechRecognition());
+        if (voiceExperience != null)
+        {
+            if (resultText)
+            {
+                resultText.text = "Listening...";
+                resultText.color = Color.yellow;
+            }
+            if (micButton) micButton.interactable = false;
+
+            // Mikrofonu Ac
+            voiceExperience.Activate();
+        }
+        else
+        {
+            Debug.LogError("Voice Experience atanmadi! Simulasyon calisiyor.");
+            StartCoroutine(SimulateSpeechRecognition());
+        }
     }
 
-    // Wizard of Oz Simulation
-    IEnumerator SimulateSpeechRecognition()
+    // --- WIT.AI SONUCU (PUANLAMA) ---
+    public void OnVoiceResult(string spokenText)
     {
-        if (micButton) micButton.interactable = false;
+        Debug.Log("Algilanan: " + spokenText);
+        float score = CalculateSimilarity(currentWord.german, spokenText);
 
         if (resultText)
         {
-            resultText.text = "Listening...";
-            resultText.color = Color.yellow;
-        }
-
-        yield return new WaitForSeconds(2.0f); // Wait for 2 seconds
-
-        int accuracy = Random.Range(85, 100); // Random high accuracy
-
-        if (resultText)
-        {
-            if (accuracy > 80)
+            if (score > 60)
             {
-                resultText.text = $"Correct! ({accuracy}%)";
+                resultText.text = $"Correct! ({score:F0}%)\nYou said: {spokenText}";
                 resultText.color = Color.green;
             }
             else
             {
-                resultText.text = $"Try again. ({accuracy}%)";
+                resultText.text = $"Try again. ({score:F0}%)\nYou said: {spokenText}";
                 resultText.color = Color.red;
             }
         }
-
         if (micButton) micButton.interactable = true;
+    }
+
+    // --- SIMULASYON (Yedek) ---
+    IEnumerator SimulateSpeechRecognition()
+    {
+        if (micButton) micButton.interactable = false;
+        if (resultText) { resultText.text = "Listening (Sim)..."; resultText.color = Color.yellow; }
+        yield return new WaitForSeconds(2.0f);
+        int accuracy = Random.Range(85, 100);
+        if (resultText) { resultText.text = $"Correct! ({accuracy}%)"; resultText.color = Color.green; }
+        if (micButton) micButton.interactable = true;
+    }
+
+    // --- PUANLAMA MOTORU ---
+    public float CalculateSimilarity(string target, string spoken)
+    {
+        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(spoken)) return 0.0f;
+        string s1 = target.Trim().ToLower();
+        string s2 = spoken.Trim().ToLower();
+        if (s1 == s2) return 100f;
+        int distance = LevenshteinDistance(s1, s2);
+        int maxLength = System.Math.Max(s1.Length, s2.Length);
+        float similarity = 1.0f - ((float)distance / maxLength);
+        return similarity * 100.0f;
+    }
+
+    int LevenshteinDistance(string s, string t)
+    {
+        int n = s.Length;
+        int m = t.Length;
+        int[,] d = new int[n + 1, m + 1];
+        if (n == 0) return m;
+        if (m == 0) return n;
+        for (int i = 0; i <= n; d[i, 0] = i++) { }
+        for (int j = 0; j <= m; d[0, j] = j++) { }
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                d[i, j] = System.Math.Min(
+                    System.Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[n, m];
     }
 }
