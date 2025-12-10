@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor.VersionControl;
+using UnityEngine.Networking;
+using System.Text;
 
 // Classes to match JSON data
 [System.Serializable]
@@ -37,6 +39,14 @@ public class SmartLearningPanel : MonoBehaviour
 
     private Dictionary<string, WordData> dataDictionary = new Dictionary<string, WordData>();
     private WordData currentWord; // The currently selected word
+
+    [System.Serializable]
+    private class OllamaResponse
+    {
+        public string response;
+    }
+
+    private string generatedSentence;
 
     void Start()
     {
@@ -73,10 +83,11 @@ public class SmartLearningPanel : MonoBehaviour
             // Fill UI elements
             if (germanText) germanText.text = currentWord.german;
             if (englishText) englishText.text = currentWord.english;
-            if (sentenceText) sentenceText.text = currentWord.sentence;
+            if (sentenceText) sentenceText.text = "Generating sentence...";
             if (resultText) resultText.text = "";
 
             if (panelRoot) panelRoot.SetActive(true);
+            StartCoroutine(GenerateSentence());
 
             // Button listeners
             if (speakerButton)
@@ -158,5 +169,49 @@ public class SmartLearningPanel : MonoBehaviour
             resultText.color = Color.red;
         }
         micButton.interactable = true;
+    }
+
+    IEnumerator GenerateSentence()
+    {
+        string url = "http://localhost:11434/api/generate";
+
+        string jsonBody = $@"
+        {{
+        ""model"": ""llama3:latest"",
+        ""prompt"": ""Schreibe einen einfachen Satz zu '{currentWord.german}' für Deutschlerner bestehend aus Subjekt, Prädikat, Objekt.Maximal 7 Wörter. Der Satz muss '{currentWord.german}'. NUR der Satz."",
+        ""stream"": false
+        }}
+        ";
+
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
+
+        using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                string json = request.downloadHandler.text;
+
+                // JSON -> Objekt
+                OllamaResponse result = JsonUtility.FromJson<OllamaResponse>(json);
+
+                // Nur das response-Feld verwenden
+                generatedSentence = result.response;
+
+                if (sentenceText != null)
+                    sentenceText.text = generatedSentence;
+
+                Debug.Log($"AI-generated sentence for {currentWord.id}: " + generatedSentence);
+            }
+            else
+            {
+                Debug.LogError("Error: " + request.error);
+            }
+        }
     }
 }
