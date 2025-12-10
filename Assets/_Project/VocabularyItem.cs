@@ -1,25 +1,62 @@
 using UnityEngine;
-// If you are using the XR Interaction Toolkit, this line may be important,
-// otherwise it might cause errors.
-// But for event-based systems, we only need public functions,
-// so we keep it simple.
+using UnityEngine.InputSystem;
+using UnityEngine.XR.Interaction.Toolkit;
 
 public class VocabularyItem : MonoBehaviour
 {
-    public string wordID; // We will write "apple" in the Inspector
-    public SmartLearningPanel panelController; // Drag the Canvas object here
+    [Header("Settings")]
+    public string wordID;
+    public SmartLearningPanel panelController;
+    public GameObject bubbleObject;
 
-    // This will run when the user looks at the object
-    public void OnHoverEnter()
+    private bool isHovering = false; 
+
+    void Start()
     {
-        if (panelController != null)
-            panelController.ShowWord(wordID);
+        if (bubbleObject) bubbleObject.SetActive(false);
     }
 
-    // This will run when the user stops looking at the object
-    public void OnHoverExit()
+    void Update()
+    {
+      
+        if (isHovering)
+        {
+          
+            if (Keyboard.current != null && Keyboard.current.tKey.wasPressedThisFrame)
+            {
+                OnActivate();
+            }
+        }
+    }
+
+    // HOVER ENTER 
+    public void OnHoverEnter(HoverEnterEventArgs args)
+    {
+        isHovering = true;
+        if (bubbleObject) bubbleObject.SetActive(true);
+    }
+
+    // HOVER EXIT 
+    public void OnHoverExit(HoverExitEventArgs args)
+    {
+        isHovering = false;
+        if (bubbleObject) bubbleObject.SetActive(false);
+    }
+
+    // SELECT ENTERED 
+    public void OnSelectEnter(SelectEnterEventArgs args)
+    {
+        OnActivate();
+    }
+
+    // ACTIVATE Panel
+    public void OnActivate()
     {
         if (panelController != null)
-            panelController.HidePanel();
+        {
+            panelController.ShowWord(wordID);
+            
+            if (bubbleObject) bubbleObject.SetActive(false);
+        }
     }
 }

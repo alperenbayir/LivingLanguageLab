@@ -8,7 +8,7 @@ using UnityEditor.VersionControl;
 using UnityEngine.Networking;
 using System.Text;
 
-// Classes to match JSON data
+// JSON Data Classes
 [System.Serializable]
 public class WordData
 {
@@ -28,17 +28,29 @@ public class WordList
 public class SmartLearningPanel : MonoBehaviour
 {
     [Header("UI Elements")]
-    public GameObject panelRoot; // The panel itself (open/close)
+    public GameObject panelRoot;
     public TextMeshProUGUI germanText;
     public TextMeshProUGUI englishText;
     public TextMeshProUGUI sentenceText;
     public TextMeshProUGUI resultText;
+
+    [Header("Buttons")]
     public Button speakerButton;
     public Button micButton;
-    public AudioSource audioSource;
+    public Button exitButton;
+
+    [Header("Article Colors")]
+    public Color derColor = Color.blue;
+    public Color dieColor = Color.red;
+    public Color dasColor = Color.green;
+    public Color defaultColor = Color.white;
+
+    [Header("Voice AI (YENI)")]
+    public AppVoiceExperience voiceExperience; // Mikrofon (Dinleme)
+    public TTSSpeaker ttsSpeaker;              // Hoparlör (Konusma)
 
     private Dictionary<string, WordData> dataDictionary = new Dictionary<string, WordData>();
-    private WordData currentWord; // The currently selected word
+    private WordData currentWord;
 
     [System.Serializable]
     private class OllamaResponse
@@ -51,37 +63,53 @@ public class SmartLearningPanel : MonoBehaviour
     void Start()
     {
         LoadJSON();
-        panelRoot.SetActive(false); // Hidden at start
+
+        if (panelRoot != null) panelRoot.SetActive(false);
+
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ClosePanel);
+        }
     }
 
-    // 1. LOAD JSON
+    public void ClosePanel()
+    {
+        if (panelRoot != null)
+            panelRoot.SetActive(false);
+    }
+
     void LoadJSON()
     {
         string path = Path.Combine(Application.streamingAssetsPath, "words.json");
-        if (File.Exists(path))
+        if (File.Exists(path) || Application.isEditor)
         {
-            string jsonString = File.ReadAllText(path);
-            WordList loadedData = JsonUtility.FromJson<WordList>(jsonString);
-            foreach (var word in loadedData.items)
+            try
             {
-                dataDictionary.Add(word.id, word);
+                string jsonString = File.ReadAllText(path);
+                WordList loadedData = JsonUtility.FromJson<WordList>(jsonString);
+                foreach (var word in loadedData.items)
+                {
+                    if (!dataDictionary.ContainsKey(word.id))
+                        dataDictionary.Add(word.id, word);
+                }
             }
+            catch (System.Exception e) { Debug.LogWarning("JSON Error: " + e.Message); }
         }
-        else { Debug.LogError("JSON file not found!"); }
     }
 
-    // Updated ShowWord function
     public void ShowWord(string wordID)
     {
-        // If the panel was about to close (timer running), cancel it!
-        CancelInvoke("DeactivatePanel");
-
         if (dataDictionary.ContainsKey(wordID))
         {
             currentWord = dataDictionary[wordID];
 
-            // Fill UI elements
-            if (germanText) germanText.text = currentWord.german;
+            if (germanText)
+            {
+                germanText.text = currentWord.german;
+                UpdateArticleColor(currentWord.german);
+            }
+
             if (englishText) englishText.text = currentWord.english;
             if (sentenceText) sentenceText.text = "Generating sentence...";
             if (resultText) resultText.text = "";
@@ -89,7 +117,7 @@ public class SmartLearningPanel : MonoBehaviour
             if (panelRoot) panelRoot.SetActive(true);
             StartCoroutine(GenerateSentence());
 
-            // Button listeners
+            // Butonlari Bagla
             if (speakerButton)
             {
                 speakerButton.onClick.RemoveAllListeners();
@@ -103,72 +131,55 @@ public class SmartLearningPanel : MonoBehaviour
         }
     }
 
-    // Updated HidePanel function
-    public void HidePanel()
+    void UpdateArticleColor(string text)
     {
-        // Do not close immediately! Wait 1 second.
-        // During this time, the user can still reach the button.
-        Invoke("DeactivatePanel", 4.0f);
+        if (text.StartsWith("Der ")) germanText.color = derColor;
+        else if (text.StartsWith("Die ")) germanText.color = dieColor;
+        else if (text.StartsWith("Das ")) germanText.color = dasColor;
+        else germanText.color = defaultColor;
     }
 
-    // The actual function that closes the panel
-    void DeactivatePanel()
-    {
-        if (panelRoot) panelRoot.SetActive(false);
-    }
-
-    // 3. PLAY AUDIO (Speaker)
+    // --- YAPAY ZEKA KONUSMA (TTS) ---
     void PlayAudio()
     {
         if (currentWord == null) return;
+        string textToSpeak = currentWord.german;
 
-        // 1. Get the audio file name from JSON (e.g. "apple_audio")
-        string audioName = currentWord.audioFile;
-
-        // 2. Load audio from Resources folder
-        AudioClip clip = Resources.Load<AudioClip>(audioName);
-
-        if (clip != null)
+        if (ttsSpeaker != null)
         {
-            // 3. Play sound once
-            audioSource.PlayOneShot(clip);
-            Debug.Log("🔊 Playing audio: " + audioName);
+            Debug.Log("Konuşuluyor: " + textToSpeak);
+
+            // --- BURAYI DEGISTIR ---
+            // İsim vermeden sadece metni gönder.
+            // Wit.ai otomatik olarak varsayılan bir ses atayacaktır.
+            ttsSpeaker.Speak(textToSpeak);
         }
         else
         {
-            Debug.LogError("❌ Audio file not found! Check 'Assets/Resources'. File name should be: " + audioName);
+            Debug.LogError("HATA: TTS Speaker atanmamış!");
         }
     }
 
-    // 4. MICROPHONE TEST (Simulation / Wizard of Oz)
-    // Real speech API integration is risky for presentation, so we simulate it.
+    // --- SES TANIMA BASLATMA ---
     void StartMicTest()
     {
-        StartCoroutine(SimulateSpeechRecognition());
-    }
-
-    IEnumerator SimulateSpeechRecognition()
-    {
-        micButton.interactable = false;
-        resultText.text = "🎤 Listening...";
-        resultText.color = Color.yellow;
-
-        yield return new WaitForSeconds(2.0f); // Fake listening for 2 seconds
-
-        // Generate a random accuracy value (in presentation, it will often be high)
-        int accuracy = Random.Range(75, 100);
-
-        if (accuracy > 80)
+        if (voiceExperience != null)
         {
-            resultText.text = $"✅ Correct! ({accuracy}%)";
-            resultText.color = Color.green;
+            if (resultText)
+            {
+                resultText.text = "Listening...";
+                resultText.color = Color.yellow;
+            }
+            if (micButton) micButton.interactable = false;
+
+            // Mikrofonu Ac
+            voiceExperience.Activate();
         }
         else
         {
-            resultText.text = $"❌ Retry. ({accuracy}%)";
-            resultText.color = Color.red;
+            Debug.LogError("Voice Experience atanmadi! Simulasyon calisiyor.");
+            StartCoroutine(SimulateSpeechRecognition());
         }
-        micButton.interactable = true;
     }
 
     IEnumerator GenerateSentence()

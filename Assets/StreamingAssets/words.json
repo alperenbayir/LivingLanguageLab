@@ -20,6 +20,13 @@
             "english": "The Glass",
             "sentence": "Ich hätte gerne ein Glas Kaffee.",
             "audioFile": "glass_audio"
+        },
+        {
+            "id": "wein_glass",
+            "german": "das Weinglas",
+            "english": "The Wine Glass",
+            "sentence": "Ich trinke Wein aus dem Weinglas.",
+            "audioFile": "wein_glass_audio"
         }
     ]
 }
