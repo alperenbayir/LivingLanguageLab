@@ -4,7 +4,8 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using UnityEditor.VersionControl;
+using Oculus.Voice;             
+using Meta.WitAi.TTS.Utilities; 
 using UnityEngine.Networking;
 using System.Text;
 
@@ -24,6 +25,7 @@ public class WordList
 {
     public WordData[] items;
 }
+
 
 public class SmartLearningPanel : MonoBehaviour
 {
@@ -115,8 +117,8 @@ public class SmartLearningPanel : MonoBehaviour
             if (resultText) resultText.text = "";
 
             if (panelRoot) panelRoot.SetActive(true);
+            
             StartCoroutine(GenerateSentence());
-
             // Butonlari Bagla
             if (speakerButton)
             {
@@ -180,6 +182,74 @@ public class SmartLearningPanel : MonoBehaviour
             Debug.LogError("Voice Experience atanmadi! Simulasyon calisiyor.");
             StartCoroutine(SimulateSpeechRecognition());
         }
+    }
+
+    // --- WIT.AI SONUCU (PUANLAMA) ---
+    public void OnVoiceResult(string spokenText)
+    {
+        Debug.Log("Algilanan: " + spokenText);
+        float score = CalculateSimilarity(currentWord.german, spokenText);
+
+        if (resultText)
+        {
+            if (score > 70)
+            {
+                resultText.text = $"Correct! ({score:F0}%)\nYou said: {spokenText}";
+                resultText.color = Color.green;
+            }
+            else
+            {
+                resultText.text = $"Try again. ({score:F0}%)\nYou said: {spokenText}";
+                resultText.color = Color.red;
+            }
+        }
+        if (micButton) micButton.interactable = true;
+    }
+
+    // --- SIMULASYON (Yedek) ---
+    IEnumerator SimulateSpeechRecognition()
+    {
+        if (micButton) micButton.interactable = false;
+        if (resultText) { resultText.text = "Listening (Sim)..."; resultText.color = Color.yellow; }
+        yield return new WaitForSeconds(2.0f);
+        int accuracy = Random.Range(85, 100);
+        if (resultText) { resultText.text = $"Correct! ({accuracy}%)"; resultText.color = Color.green; }
+        if (micButton) micButton.interactable = true;
+    }
+
+    // --- Score Engine ---
+    public float CalculateSimilarity(string target, string spoken)
+    {
+        if (string.IsNullOrEmpty(target) || string.IsNullOrEmpty(spoken)) return 0.0f;
+        string s1 = target.Trim().ToLower();
+        string s2 = spoken.Trim().ToLower();
+        if (s1 == s2) return 100f;
+        int distance = LevenshteinDistance(s1, s2);
+        int maxLength = System.Math.Max(s1.Length, s2.Length);
+        float similarity = 1.0f - ((float)distance / maxLength);
+        return similarity * 100.0f;
+    }
+    // --- LevensteinDistance Algorithm ---
+    int LevenshteinDistance(string s, string t)
+    {
+        int n = s.Length;
+        int m = t.Length;
+        int[,] d = new int[n + 1, m + 1];
+        if (n == 0) return m;
+        if (m == 0) return n;
+        for (int i = 0; i <= n; d[i, 0] = i++) { }
+        for (int j = 0; j <= m; d[0, j] = j++) { }
+        for (int i = 1; i <= n; i++)
+        {
+            for (int j = 1; j <= m; j++)
+            {
+                int cost = (t[j - 1] == s[i - 1]) ? 0 : 1;
+                d[i, j] = System.Math.Min(
+                    System.Math.Min(d[i - 1, j] + 1, d[i, j - 1] + 1),
+                    d[i - 1, j - 1] + cost);
+            }
+        }
+        return d[n, m];
     }
 
     IEnumerator GenerateSentence()
