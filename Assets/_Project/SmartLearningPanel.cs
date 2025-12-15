@@ -119,17 +119,17 @@ public class SmartLearningPanel : MonoBehaviour
             if (panelRoot) panelRoot.SetActive(true);
             
             StartCoroutine(GenerateSentence());
-            // Butonlari Bagla
-            if (speakerButton)
-            {
-                speakerButton.onClick.RemoveAllListeners();
-                speakerButton.onClick.AddListener(PlayAudio);
-            }
-            if (micButton)
-            {
-                micButton.onClick.RemoveAllListeners();
-                micButton.onClick.AddListener(StartMicTest);
-            }
+        //    // Butonlari Bagla
+        //    if (speakerButton)
+        //    {
+        //        speakerButton.onClick.RemoveAllListeners();
+        //        speakerButton.onClick.AddListener(PlayAudio);
+        //    }
+        //    if (micButton)
+        //    {
+        //        micButton.onClick.RemoveAllListeners();
+        //        micButton.onClick.AddListener(StartMicTest);
+        //    }
         }
     }
 
