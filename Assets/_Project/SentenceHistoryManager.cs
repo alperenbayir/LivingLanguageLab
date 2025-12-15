@@ -22,16 +22,15 @@ public static class SentenceHistoryManager
 
         history[objectId].Add(newSentence);
        
-        foreach (string historySentence in history[objectId])
-    {
-        // This loop runs every time a new sentence is added
-            Debug.Log("Entry: " + historySentence);
-        
-        // Example: You could also check for duplicates here or update a UI list
-    }
         if (history[objectId].Count > MaxHistoryCount)
             history[objectId].RemoveAt(0);
 
         Debug.Log($"[History] Added sentence for '{objectId}'.");
+    }
+
+    // Returns how many unique objects have been discovered
+    public static int GetDiscoveredCount()
+    {
+        return history.Count;
     }
 }

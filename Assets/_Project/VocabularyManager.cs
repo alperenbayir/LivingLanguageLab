@@ -52,6 +52,10 @@ public class VocabularyManager : MonoBehaviour
         }
     }
 
+    public int GetTotalCount()
+    {
+        return database.Count;
+    }
 
     public ItemData GetItem(string id)
     {
