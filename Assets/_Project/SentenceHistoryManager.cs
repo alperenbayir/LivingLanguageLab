@@ -4,33 +4,65 @@ using UnityEngine;
 
 public static class SentenceHistoryManager
 {
-    private static Dictionary<string, List<string>> history = new Dictionary<string, List<string>>();
-    private const int MaxHistoryCount = 4; // llm gets bloated with sentences
+
+    //Sentence history for the LLM
+    private static Dictionary<string, List<string>> sentenceHistory = new Dictionary<string, List<string>>();
+    private const int MaxHistoryCount = 4; //Too much sentences confuse the LLM
+
+    //ObjectID history for counting and tracking (SFX and counter label)
+    private static HashSet<string> discoveredIDs = new HashSet<string>();
+
 
     public static List<string> GetHistory(string objectId)
     {
-        if (history.ContainsKey(objectId))
-            return history[objectId];
+        if (sentenceHistory.ContainsKey(objectId))
+            return sentenceHistory[objectId];
 
         return new List<string>();
     }
 
+    public static void MarkAsDiscovered(string objectId)
+    {
+        if (string.IsNullOrEmpty(objectId)) return;
+
+        if (!discoveredIDs.Contains(objectId))
+        {
+            discoveredIDs.Add(objectId);
+            Debug.Log($"[History] New Discovery: {objectId}");
+        }
+    }
+
+    public static bool IsDiscovered(string objectId)
+    {
+        return discoveredIDs.Contains(objectId);
+    }
+
+    public static int GetDiscoveredCount()
+    {
+        return discoveredIDs.Count;
+    }
+
+    //This function is for LLM
     public static void AddHistory(string objectId, string newSentence)
     {
-        if (!history.ContainsKey(objectId))
-            history[objectId] = new List<string>();
+        if (!sentenceHistory.ContainsKey(objectId))
+            sentenceHistory[objectId] = new List<string>();
 
-        history[objectId].Add(newSentence);
+        sentenceHistory[objectId].Add(newSentence);
        
-        if (history[objectId].Count > MaxHistoryCount)
-            history[objectId].RemoveAt(0);
+        if (sentenceHistory[objectId].Count > MaxHistoryCount)
+            sentenceHistory[objectId].RemoveAt(0);
 
         Debug.Log($"[History] Added sentence for '{objectId}'.");
     }
 
-    // Returns how many unique objects have been discovered
-    public static int GetDiscoveredCount()
+
+    // NOT USED YET (PREPARED FOR THE NEW SCENE)
+    public static void ResetHistory()
     {
-        return history.Count;
+        discoveredIDs.Clear();
+        sentenceHistory.Clear();
     }
+
+
 }

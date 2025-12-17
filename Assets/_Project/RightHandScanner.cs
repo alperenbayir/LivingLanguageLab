@@ -2,7 +2,7 @@
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 
-// These namespaces match the structure in your uploaded file
+
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
@@ -21,7 +21,7 @@ public class RightHandScanner : MonoBehaviour
 
     void Start()
     {
-        // Auto-find logic: If you didn't drag it, we look for it on this object
+        // Auto-find logic
         if (scannerInteractor == null)
             scannerInteractor = GetComponent<XRBaseInteractor>();
     }
@@ -43,11 +43,11 @@ public class RightHandScanner : MonoBehaviour
     {
         if (scannerInteractor == null)
         {
-            Debug.LogError("❌ ERROR: Scanner Interactor is missing!");
+            Debug.LogError("Scanner Interactor is missing!");
             return;
         }
 
-        // 1. Get the list of hovered items
+        // Get the list of hovered items
         List<IXRHoverInteractable> hoverList = scannerInteractor.interactablesHovered;
 
    
@@ -56,27 +56,23 @@ public class RightHandScanner : MonoBehaviour
         {
             foreach (var target in hoverList)
             {
-                // DEBUG: Print the name of everything we see
-                Debug.Log($"   👉 Found: {target.transform.name}");
+               
 
                 WordItem item = target.transform.GetComponent<WordItem>();
                 if (item == null) item = target.transform.GetComponentInParent<WordItem>();
 
                 if (item != null)
                 {
-                    Debug.Log($"      ✅ SUCCESS! Found WordItem ID: {item.objectID}");
+                    Debug.Log($"     Found WordItem ID: {item.objectID}");
                     tablet.UpdateDisplay(item);
                     return; // Stop after finding the first valid one
                 }
                 else
                 {
-                    Debug.Log("      ⚠️ This object has no 'WordItem' script!");
+                    Debug.Log("This object has no 'WordItem' script!");
                 }
             }
         }
-        else
-        {
-            Debug.Log("The ray is not 'sticking' to anything.");
-        }
+       
     }
 }
