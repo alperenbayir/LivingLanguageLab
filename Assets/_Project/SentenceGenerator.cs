@@ -24,7 +24,7 @@ public class SentenceGenerator : MonoBehaviour
         if (pastSentences.Count > 0)
         {
             string joinedHistory = string.Join(" | ", pastSentences);
-            avoidContext = $" Vermeide diese Sätze: {joinedHistory}.";
+            avoidContext = $" Vermeide diese Sï¿½tze: {joinedHistory}.";
         }
 
         // 2. Build Prompt (Compressed to single line for valid JSON)
@@ -35,7 +35,7 @@ public class SentenceGenerator : MonoBehaviour
         // 3. Prepare JSON
         string jsonBody = $@"
         {{
-            ""model"": ""llama3:latest"",
+            ""model"": ""llama3.1:8b"",
             ""prompt"": ""{promptText}"",
             ""stream"": false
         }}";
