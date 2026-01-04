@@ -162,7 +162,7 @@ public class TabletDisplay : MonoBehaviour
             voiceExperience.VoiceEvents.OnFullTranscription.AddListener(OnWitTranscription);
             voiceExperience.VoiceEvents.OnPartialTranscription.AddListener(OnWitPartialTranscription);
             voiceExperience.VoiceEvents.OnError.AddListener(OnWitError);
-            voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompleted);
+            //voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompleted);
         }
         else
         {
@@ -178,7 +178,7 @@ public class TabletDisplay : MonoBehaviour
             voiceExperience.VoiceEvents.OnFullTranscription.RemoveListener(OnWitTranscription);
             voiceExperience.VoiceEvents.OnPartialTranscription.RemoveListener(OnWitPartialTranscription);
             voiceExperience.VoiceEvents.OnError.RemoveListener(OnWitError);
-            voiceExperience.VoiceEvents.OnRequestCompleted.RemoveListener(OnWitRequestCompleted);
+            //voiceExperience.VoiceEvents.OnRequestCompleted.RemoveListener(OnWitRequestCompleted);
         }
     }
 
