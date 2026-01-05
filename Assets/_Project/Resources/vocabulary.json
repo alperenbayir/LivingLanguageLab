@@ -1,207 +1,54 @@
 {
   "items": [
-    {
-      "id": "cup-coffee",
-      "german": "Die Kaffeetasse",
-      "english": "The Coffee Cup",
-      "audioFileName": "cup-coffee",
-      "sentence": ""
-    },
-    {
-      "id": "cutting-board",
-      "german": "Das Schneidebrett",
-      "english": "The Cutting Board",
-      "audioFileName": "cutting-board",
-      "sentence": ""
-    },
-    {
-      "id": "pan",
-      "german": "Die Pfanne",
-      "english": "The Pan",
-      "audioFileName": "pan",
-      "sentence": ""
-    },
-    {
-      "id": "fish",
-      "german": "Der Fisch",
-      "english": "The Fish",
-      "audioFileName": "fish",
-      "sentence": ""
-    },
-    {
-      "id": "pot-stew",
-      "german": "Der Kochtopf",
-      "english": "The Stew Pot",
-      "audioFileName": "pot-stew",
-      "sentence": ""
-    },
-    {
-      "id": "egg",
-      "german": "Das Ei",
-      "english": "The Egg",
-      "audioFileName": "egg",
-      "sentence": ""
-    },
-    {
-      "id": "cooking-knife",
-      "german": "Das Küchenmesser",
-      "english": "The Kitchen Knife",
-      "audioFileName": "cooking-knife",
-      "sentence": ""
-    },
-    {
-      "id": "meat",
-      "german": "Das Fleisch",
-      "english": "The Meat",
-      "audioFileName": "meat",
-      "sentence": ""
-    },
-    {
-      "id": "bratwurst",
-      "german": "Die Bratwurst",
-      "english": "The Bratwurst",
-      "audioFileName": "bratwurst",
-      "sentence": ""
-    },
-    {
-      "id": "fries",
-      "german": "Die Pommes",
-      "english": "The Fries",
-      "audioFileName": "fries",
-      "sentence": ""
-    },
-    {
-      "id": "can",
-      "german": "Die Dose",
-      "english": "The Can",
-      "audioFileName": "can",
-      "sentence": ""
-    },
-    {
-      "id": "ketchup",
-      "german": "Das Ketchup",
-      "english": "The Ketchup",
-      "audioFileName": "ketchup",
-      "sentence": ""
-    },
-    {
-      "id": "mustard",
-      "german": "Der Senf",
-      "english": "The Mustard",
-      "audioFileName": "mustard",
-      "sentence": ""
-    },
-    {
-      "id": "knife-block",
-      "german": "Der Messerblock",
-      "english": "The Knife Block",
-      "audioFileName": "knife-block",
-      "sentence": ""
-    },
-    {
-      "id": "bottle-oil",
-      "german": "Das Öl",
-      "english": "The Oil",
-      "audioFileName": "bottle-oil",
-      "sentence": ""
-    },
-    {
-      "id": "fork",
-      "german": "Die Gabel",
-      "english": "The Fork",
-      "audioFileName": "fork",
-      "sentence": ""
-    },
-    {
-      "id": "knife",
-      "german": "Das Messer",
-      "english": "The Knife",
-      "audioFileName": "knife",
-      "sentence": ""
-    },
-    {
-      "id": "tomato",
-      "german": "Die Tomate",
-      "english": "The Tomato",
-      "audioFileName": "tomato",
-      "sentence": ""
-    },
-    {
-      "id": "onion",
-      "german": "Die Zwiebel",
-      "english": "The Onion",
-      "audioFileName": "onion",
-      "sentence": ""
-    },
-    {
-      "id": "orange",
-      "german": "Die Orange",
-      "english": "The Orange",
-      "audioFileName": "orange",
-      "sentence": ""
-    },
-    {
-      "id": "lemon",
-      "german": "Die Zitrone",
-      "english": "The Lemon",
-      "audioFileName": "lemon",
-      "sentence": ""
-    },
-    {
-      "id": "cake-birthday",
-      "german": "Der Geburtstagskuchen",
-      "english": "The Birthday Cake",
-      "audioFileName": "cake-birthday",
-      "sentence": ""
-    },
-    {
-      "id": "paprika",
-      "german": "Die Paprika",
-      "english": "The Paprika",
-      "audioFileName": "paprika",
-      "sentence": ""
-    },
-    {
-      "id": "turkey",
-      "german": "Der Truthahn",
-      "english": "The Turkey",
-      "audioFileName": "turkey",
-      "sentence": ""
-    },
-    {
-      "id": "plate",
-      "german": "Der Teller",
-      "english": "The Plate",
-      "audioFileName": "plate",
-      "sentence": ""
-    },
-    {
-      "id": "microwave",
-      "german": "Die Mikrowelle",
-      "english": "The Microwave",
-      "audioFileName": "microwave",
-      "sentence": ""
-    },
-    {
-      "id": "coffee-machine",
-      "german": "Die Kaffeemaschine",
-      "english": "The Coffee Machine",
-      "audioFileName": "coffee-machine",
-      "sentence": ""
-    },
-    {
-      "id": "oven",
-      "german": "Der Ofen",
-      "english": "The Oven",
-      "audioFileName": "oven",
-      "sentence": ""
-    },
-    {
-      "id": "toaster",
-      "german": "Der Toaster",
-      "english": "The Toaster",
-      "audioFileName": "toaster",
-      "sentence": ""
-    }
+    { "id": "cup-coffee", "german": "Die Kaffeetasse" },
+    { "id": "cutting-board", "german": "Das Schneidebrett" },
+    { "id": "pan", "german": "Die Pfanne" },
+    { "id": "fish", "german": "Der Fisch" },
+    { "id": "pot-stew", "german": "Der Kochtopf" },
+    { "id": "egg", "german": "Das Ei" },
+    { "id": "cooking-knife", "german": "Das Küchenmesser" },
+    { "id": "meat", "german": "Das Fleisch" },
+    { "id": "bratwurst", "german": "Die Bratwurst" },
+    { "id": "fries", "german": "Die Pommes" },
+    { "id": "can", "german": "Die Dose" },
+    { "id": "ketchup", "german": "Das Ketchup" },
+    { "id": "mustard", "german": "Der Senf" },
+    { "id": "knife-block", "german": "Der Messerblock" },
+    { "id": "bottle-oil", "german": "Das Öl" },
+    { "id": "fork", "german": "Die Gabel" },
+    { "id": "knife", "german": "Das Messer" },
+    { "id": "tomato", "german": "Die Tomate" },
+    { "id": "onion", "german": "Die Zwiebel" },
+    { "id": "orange", "german": "Die Orange" },
+    { "id": "lemon", "german": "Die Zitrone" },
+    { "id": "cake", "german": "Der Kuchen" },
+    { "id": "paprika", "german": "Die Paprika" },
+    { "id": "turkey", "german": "Der Truthahn" },
+    { "id": "plate", "german": "Der Teller" },
+    { "id": "microwave", "german": "Die Mikrowelle" },
+    { "id": "coffee-machine", "german": "Die Kaffeemaschine" },
+    { "id": "oven", "german": "Der Ofen" },
+    { "id": "toaster", "german": "Der Toaster" },
+    { "id": "bowl", "german": "Die Schüssel" },
+    { "id": "spoon", "german": "Der Löffel" },
+    { "id": "kitchen-table", "german": "Der Esstisch" },
+    { "id": "fridge", "german": "Der Kühlschrank" },
+    { "id": "freezer", "german": "Das Kühlfach" },
+    { "id": "salt-shaker", "german": "Der Salzsteuer" },
+    { "id": "pepper-shaker", "german": "Der Pfefferstreuer" },
+    { "id": "extractor-hood", "german": "Die Abdunsthaube" },
+    { "id": "spatula-baking", "german": "Der Teigschaber" },
+    { "id": "spatula-cooking", "german": "Der Pfannenwender" },
+    { "id": "cup", "german": "Die Tasse" },
+    { "id": "broccoli", "german": "Der Brokkoli" },
+    { "id": "cupcake", "german": "Der Muffin" },
+    { "id": "ice-cream", "german": "Das Eis" },
+    { "id": "pumpkin", "german": "Der Kürbis" },
+    { "id": "watermelone", "german": "Die Melone" },
+    { "id": "sandwich", "german": "Das Sandwich" },
+    { "id": "radish", "german": "Das Radieschen" },
+    { "id": "coconut", "german": "Die Kokosnuss" },
+    { "id": "chocolate-bar", "german": "Die Schokoladentafel" },
+    { "id": "fish", "german": "Der Fish" }
   ]
 }
