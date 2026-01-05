@@ -5,6 +5,7 @@ using Meta.WitAi;
 using Meta.WitAi.Requests;
 using Meta.WitAi.Events;
 using Oculus.Voice;
+using System;
 
 public class TabletDisplay : MonoBehaviour
 {
@@ -159,17 +160,22 @@ public class TabletDisplay : MonoBehaviour
         if (voiceExperience != null)
         {
             // Listen for full transcription
-            voiceExperience.VoiceEvents.OnFullTranscription.AddListener(OnWitTranscription);
-            voiceExperience.VoiceEvents.OnPartialTranscription.AddListener(OnWitPartialTranscription);
+            voiceExperience.VoiceEvents.OnFullTranscription.AddListener((text) => OnWitTranscription(text));
+            voiceExperience.VoiceEvents.OnPartialTranscription.AddListener((text) => OnWitPartialTranscription(text));
             voiceExperience.VoiceEvents.OnError.AddListener(OnWitError);
-            //voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompleted);
+            voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompleted);
         }
         else
         {
             Debug.LogWarning("TabletDisplay: AppVoiceExperience not assigned. Wit.ai features will not work.");
         }
     }
-    
+
+    private void OnWitRequestCompleted()
+    {
+        throw new NotImplementedException();
+    }
+
     void OnDestroy()
     {
         // Clean up event listeners
@@ -178,7 +184,7 @@ public class TabletDisplay : MonoBehaviour
             voiceExperience.VoiceEvents.OnFullTranscription.RemoveListener(OnWitTranscription);
             voiceExperience.VoiceEvents.OnPartialTranscription.RemoveListener(OnWitPartialTranscription);
             voiceExperience.VoiceEvents.OnError.RemoveListener(OnWitError);
-            //voiceExperience.VoiceEvents.OnRequestCompleted.RemoveListener(OnWitRequestCompleted);
+            voiceExperience.VoiceEvents.OnRequestCompleted.RemoveListener(OnWitRequestCompleted);
         }
     }
 

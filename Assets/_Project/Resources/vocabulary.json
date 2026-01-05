@@ -2,235 +2,206 @@
   "items": [
     {
       "id": "cup-coffee",
-      "article_only": "Die",
       "german": "Die Kaffeetasse",
       "english": "The Coffee Cup",
-      "audioFileName": "cup-coffee.mp3",
+      "audioFileName": "cup-coffee",
       "sentence": ""
     },
     {
       "id": "cutting-board",
-      "article_only": "Das",
       "german": "Das Schneidebrett",
       "english": "The Cutting Board",
-      "audioFileName": "cutting-board.mp3",
+      "audioFileName": "cutting-board",
       "sentence": ""
     },
     {
       "id": "pan",
-      "article_only": "Die",
       "german": "Die Pfanne",
       "english": "The Pan",
-      "audioFileName": "pan.mp3",
+      "audioFileName": "pan",
       "sentence": ""
     },
     {
       "id": "fish",
-      "article_only": "Der",
       "german": "Der Fisch",
       "english": "The Fish",
-      "audioFileName": "fish.mp3",
+      "audioFileName": "fish",
       "sentence": ""
     },
     {
       "id": "pot-stew",
-      "article_only": "Der",
       "german": "Der Kochtopf",
       "english": "The Stew Pot",
-      "audioFileName": "pot-stew.mp3",
+      "audioFileName": "pot-stew",
       "sentence": ""
     },
     {
       "id": "egg",
-      "article_only": "Das",
       "german": "Das Ei",
       "english": "The Egg",
-      "audioFileName": "egg.mp3",
+      "audioFileName": "egg",
       "sentence": ""
     },
     {
       "id": "cooking-knife",
-      "article_only": "Das",
       "german": "Das Küchenmesser",
       "english": "The Kitchen Knife",
-      "audioFileName": "cooking-knife.mp3",
+      "audioFileName": "cooking-knife",
       "sentence": ""
     },
     {
       "id": "meat",
-      "article_only": "Das",
       "german": "Das Fleisch",
       "english": "The Meat",
-      "audioFileName": "meat.mp3",
+      "audioFileName": "meat",
       "sentence": ""
     },
     {
       "id": "bratwurst",
-      "article_only": "Die",
       "german": "Die Bratwurst",
       "english": "The Bratwurst",
-      "audioFileName": "bratwurst.mp3",
+      "audioFileName": "bratwurst",
       "sentence": ""
     },
     {
       "id": "fries",
-      "article_only": "Die",
       "german": "Die Pommes",
       "english": "The Fries",
-      "audioFileName": "fries.mp3",
+      "audioFileName": "fries",
       "sentence": ""
     },
     {
       "id": "can",
-      "article_only": "Die",
       "german": "Die Dose",
       "english": "The Can",
-      "audioFileName": "can.mp3",
+      "audioFileName": "can",
       "sentence": ""
     },
     {
       "id": "ketchup",
-      "article_only": "Das",
       "german": "Das Ketchup",
       "english": "The Ketchup",
-      "audioFileName": "ketchup.mp3",
+      "audioFileName": "ketchup",
       "sentence": ""
     },
     {
       "id": "mustard",
-      "article_only": "Der",
       "german": "Der Senf",
       "english": "The Mustard",
-      "audioFileName": "mustard.mp3",
+      "audioFileName": "mustard",
       "sentence": ""
     },
     {
       "id": "knife-block",
-      "article_only": "Der",
       "german": "Der Messerblock",
       "english": "The Knife Block",
-      "audioFileName": "knife-block.mp3",
+      "audioFileName": "knife-block",
       "sentence": ""
     },
     {
       "id": "bottle-oil",
-      "article_only": "Das",
       "german": "Das Öl",
       "english": "The Oil",
-      "audioFileName": "bottle-oil.mp3",
+      "audioFileName": "bottle-oil",
       "sentence": ""
     },
     {
       "id": "fork",
-      "article_only": "Die",
       "german": "Die Gabel",
       "english": "The Fork",
-      "audioFileName": "fork.mp3",
+      "audioFileName": "fork",
       "sentence": ""
     },
     {
       "id": "knife",
-      "article_only": "Das",
       "german": "Das Messer",
       "english": "The Knife",
-      "audioFileName": "knife.mp3",
+      "audioFileName": "knife",
       "sentence": ""
     },
     {
       "id": "tomato",
-      "article_only": "Die",
       "german": "Die Tomate",
       "english": "The Tomato",
-      "audioFileName": "tomato.mp3",
+      "audioFileName": "tomato",
       "sentence": ""
     },
     {
       "id": "onion",
-      "article_only": "Die",
       "german": "Die Zwiebel",
       "english": "The Onion",
-      "audioFileName": "onion.mp3",
+      "audioFileName": "onion",
       "sentence": ""
     },
     {
       "id": "orange",
-      "article_only": "Die",
       "german": "Die Orange",
       "english": "The Orange",
-      "audioFileName": "orange.mp3",
+      "audioFileName": "orange",
       "sentence": ""
     },
     {
       "id": "lemon",
-      "article_only": "Die",
       "german": "Die Zitrone",
       "english": "The Lemon",
-      "audioFileName": "lemon.mp3",
+      "audioFileName": "lemon",
       "sentence": ""
     },
     {
       "id": "cake-birthday",
-      "article_only": "Der",
       "german": "Der Geburtstagskuchen",
       "english": "The Birthday Cake",
-      "audioFileName": "cake-birthday.mp3",
+      "audioFileName": "cake-birthday",
       "sentence": ""
     },
     {
       "id": "paprika",
-      "article_only": "Die",
       "german": "Die Paprika",
       "english": "The Paprika",
-      "audioFileName": "paprika.mp3",
+      "audioFileName": "paprika",
       "sentence": ""
     },
     {
       "id": "turkey",
-      "article_only": "Der",
       "german": "Der Truthahn",
       "english": "The Turkey",
-      "audioFileName": "turkey.mp3",
+      "audioFileName": "turkey",
       "sentence": ""
     },
     {
       "id": "plate",
-      "article_only": "Der",
       "german": "Der Teller",
       "english": "The Plate",
-      "audioFileName": "plate.mp3",
+      "audioFileName": "plate",
       "sentence": ""
     },
     {
       "id": "microwave",
-      "article_only": "Die",
       "german": "Die Mikrowelle",
       "english": "The Microwave",
-      "audioFileName": "microwave.mp3",
+      "audioFileName": "microwave",
       "sentence": ""
     },
     {
       "id": "coffee-machine",
-      "article_only": "Die",
       "german": "Die Kaffeemaschine",
       "english": "The Coffee Machine",
-      "audioFileName": "coffee-machine.mp3",
+      "audioFileName": "coffee-machine",
       "sentence": ""
     },
     {
       "id": "oven",
-      "article_only": "Der",
       "german": "Der Ofen",
       "english": "The Oven",
-      "audioFileName": "oven.mp3",
+      "audioFileName": "oven",
       "sentence": ""
     },
     {
       "id": "toaster",
-      "article_only": "Der",
       "german": "Der Toaster",
       "english": "The Toaster",
-      "audioFileName": "toaster.mp3",
+      "audioFileName": "toaster",
       "sentence": ""
     }
   ]
-
+}
