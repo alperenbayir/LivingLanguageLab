@@ -3,35 +3,43 @@ using UnityEngine;
 public class TabletMenuManager : MonoBehaviour
 {
     [Header("Paneller")]
-    public GameObject MainMenuLayout;  // Play ve Exit butonlarýnýn olduðu ana panel
-    public GameObject SubMenuLayout;   // Resimlerin ve Level Slider'ýn olduðu panel
+    public GameObject MainMenuLayout;
+    public GameObject SubMenuLayout;
 
-    // Play butonuna basýnca: Ana menüyü kapat, Seçenekleri aç
+    [Header("Ses")]
+    public AudioSource sfxSource;
+    public AudioClip clickSound;
+
     public void OpenSelectionMenu()
     {
+        PlaySound();
         if (MainMenuLayout != null) MainMenuLayout.SetActive(false);
         if (SubMenuLayout != null) SubMenuLayout.SetActive(true);
     }
 
-    // Geri butonuna basýnca: Seçenekleri kapat, Ana menüyü aç
     public void BackToMainMenu()
     {
-        // (Burada ufak bir düzeltme yaptým: Geri dönmek için Sub kapanmalý, Main açýlmalý)
+        PlaySound();
         if (SubMenuLayout != null) SubMenuLayout.SetActive(false);
         if (MainMenuLayout != null) MainMenuLayout.SetActive(true);
     }
 
-    // Exit butonuna basýnca çalýþacak fonksiyon
     public void QuitGame()
     {
+        PlaySound();
         Debug.Log("Oyundan çýkýlýyor...");
-
 #if UNITY_EDITOR
-        // Eðer Unity Editöründeysek 'Play' modunu durdurur
         UnityEditor.EditorApplication.isPlaying = false;
 #else
-            // Eðer oyun Build alýnmýþsa (telefonda/PC'de) uygulamayý tamamen kapatýr
-            Application.Quit();
+        Application.Quit();
 #endif
+    }
+
+    void PlaySound()
+    {
+        if (sfxSource != null && clickSound != null)
+        {
+            sfxSource.PlayOneShot(clickSound);
+        }
     }
 }

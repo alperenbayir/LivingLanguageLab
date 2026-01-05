@@ -6400,7 +6400,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1356260914}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b15403450229c3a4b8455a61d6143a6d, type: 3}
   m_Name: 
@@ -6534,7 +6534,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1356260914}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a6b3124b830442d45b9f357ff99b152f, type: 3}
   m_Name: 
@@ -9686,12 +9686,18 @@ MonoBehaviour:
   sentenceText: {fileID: 1031030465}
   progressText: {fileID: 1659366888}
   listenButton: {fileID: 1380465450}
-  newDiscoverySound: {fileID: 8300000, guid: bccbe8a694ef3004fbf9cf8b200eda68, type: 3}
+  practicePronunciationButton: {fileID: 0}
+  pronunciationStatusText: {fileID: 0}
+  pronunciationPercentageText: {fileID: 0}
+  speakButton: {fileID: 0}
+  listenButtonPronunciation: {fileID: 0}
   audioSource: {fileID: 1804300291}
+  newDiscoverySound: {fileID: 8300000, guid: bccbe8a694ef3004fbf9cf8b200eda68, type: 3}
   locationLabel: {fileID: 0}
   backgroundGrid: {fileID: 282046215}
   vocabManager: {fileID: 1348460099}
   sentenceGenerator: {fileID: 1348460098}
+  recordingDuration: 4.5
   locationName: student@kitchen
   isProcessing: 0
 --- !u!82 &1804300291
