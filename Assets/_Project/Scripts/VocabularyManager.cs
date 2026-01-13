@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class ItemData
 {
     public string id;
+    public string article_only;
     public string german;
     public string english;
     public string audioFileName;
