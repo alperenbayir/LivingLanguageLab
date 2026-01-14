@@ -34,6 +34,8 @@ public class LevelSelectionUI : MonoBehaviour
     private string currentSelectedLevel;
     private string[] levelNames = { "A1", "A2", "B1", "B2", "C1" };
 
+    private int lastSliderIndex = -1;
+
     void Start()
     {
         // Loading panelini baþta gizle
@@ -93,6 +95,12 @@ public class LevelSelectionUI : MonoBehaviour
     void OnLevelChanged(float value)
     {
         int index = Mathf.RoundToInt(value);
+        // Eðer slider yeni bir kademeye geldiyse ses çal (Sürekli cýzýrtý yapmasýn diye)
+        if (index != lastSliderIndex)
+        {
+            PlayClickSound(); // SLIDER SESÝ BURADA ÇALIYOR
+            lastSliderIndex = index;
+        }
         currentSelectedLevel = levelNames[index];
         if (levelDisplayLabel != null) levelDisplayLabel.text = currentSelectedLevel;
     }

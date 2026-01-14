@@ -231,6 +231,174 @@
       "english": "The Toaster",
       "audioFileName": "toaster",
       "sentence": ""
+    },
+    {
+      "id": "cake",
+      "article_only": "Der",
+      "german": "Der Kuchen",
+      "english": "The Cake",
+      "audioFileName": "cake",
+      "sentence": ""
+    },
+    {
+      "id": "bowl",
+      "article_only": "Die",
+      "german": "Die Schüssel",
+      "english": "The Bowl",
+      "audioFileName": "bowl",
+      "sentence": ""
+    },
+    {
+      "id": "spoon",
+      "article_only": "Der",
+      "german": "Der Löffel",
+      "english": "The Spoon",
+      "audioFileName": "spoon",
+      "sentence": ""
+    },
+    {
+      "id": "kitchen-table",
+      "article_only": "Der",
+      "german": "Der Esstisch",
+      "english": "The Dining Table",
+      "audioFileName": "kitchen-table",
+      "sentence": ""
+    },
+    {
+      "id": "fridge",
+      "article_only": "Der",
+      "german": "Der Kühlschrank",
+      "english": "The Fridge",
+      "audioFileName": "fridge",
+      "sentence": ""
+    },
+    {
+      "id": "freezer",
+      "article_only": "Das",
+      "german": "Das Kühlfach",
+      "english": "The Freezer",
+      "audioFileName": "freezer",
+      "sentence": ""
+    },
+    {
+      "id": "salt-shaker",
+      "article_only": "Der",
+      "german": "Der Salzstreuer",
+      "english": "The Salt Shaker",
+      "audioFileName": "salt-shaker",
+      "sentence": ""
+    },
+    {
+      "id": "pepper-shaker",
+      "article_only": "Der",
+      "german": "Der Pfefferstreuer",
+      "english": "The Pepper Shaker",
+      "audioFileName": "pepper-shaker",
+      "sentence": ""
+    },
+    {
+      "id": "extractor-hood",
+      "article_only": "Die",
+      "german": "Die Abdunsthaube",
+      "english": "The Extractor Hood",
+      "audioFileName": "extractor-hood",
+      "sentence": ""
+    },
+    {
+      "id": "spatula-baking",
+      "article_only": "Der",
+      "german": "Der Teigschaber",
+      "english": "The Dough Scraper",
+      "audioFileName": "spatula-baking",
+      "sentence": ""
+    },
+    {
+      "id": "spatula-cooking",
+      "article_only": "Der",
+      "german": "Der Pfannenwender",
+      "english": "The Spatula",
+      "audioFileName": "spatula-cooking",
+      "sentence": ""
+    },
+    {
+      "id": "cup",
+      "article_only": "Die",
+      "german": "Die Tasse",
+      "english": "The Cup",
+      "audioFileName": "cup",
+      "sentence": ""
+    },
+    {
+      "id": "broccoli",
+      "article_only": "Der",
+      "german": "Der Brokkoli",
+      "english": "The Broccoli",
+      "audioFileName": "broccoli",
+      "sentence": ""
+    },
+    {
+      "id": "cupcake",
+      "article_only": "Der",
+      "german": "Der Muffin",
+      "english": "The Muffin",
+      "audioFileName": "cupcake",
+      "sentence": ""
+    },
+    {
+      "id": "ice-cream",
+      "article_only": "Das",
+      "german": "Das Eis",
+      "english": "The Ice Cream",
+      "audioFileName": "ice-cream",
+      "sentence": ""
+    },
+    {
+      "id": "pumpkin",
+      "article_only": "Der",
+      "german": "Der Kürbis",
+      "english": "The Pumpkin",
+      "audioFileName": "pumpkin",
+      "sentence": ""
+    },
+    {
+      "id": "watermelone",
+      "article_only": "Die",
+      "german": "Die Melone",
+      "english": "The Melon",
+      "audioFileName": "watermelone",
+      "sentence": ""
+    },
+    {
+      "id": "sandwich",
+      "article_only": "Das",
+      "german": "Das Sandwich",
+      "english": "The Sandwich",
+      "audioFileName": "sandwich",
+      "sentence": ""
+    },
+    {
+      "id": "radish",
+      "article_only": "Das",
+      "german": "Das Radieschen",
+      "english": "The Radish",
+      "audioFileName": "radish",
+      "sentence": ""
+    },
+    {
+      "id": "coconut",
+      "article_only": "Die",
+      "german": "Die Kokosnuss",
+      "english": "The Coconut",
+      "audioFileName": "coconut",
+      "sentence": ""
+    },
+    {
+      "id": "chocolate-bar",
+      "article_only": "Die",
+      "german": "Die Schokoladentafel",
+      "english": "The Chocolate Bar",
+      "audioFileName": "chocolate-bar",
+      "sentence": ""
     }
   ]
 }
