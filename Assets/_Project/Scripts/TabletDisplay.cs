@@ -6,11 +6,10 @@ using Meta.WitAi.Requests;
 using Meta.WitAi.Events;
 using Oculus.Voice;
 using System;
+using UnityEngine.SceneManagement;
 
 public class TabletDisplay : MonoBehaviour
 {
-
-
     // ============================================================================
     // LAYOUT CONTAINERS
     // ============================================================================
@@ -18,6 +17,17 @@ public class TabletDisplay : MonoBehaviour
     public GameObject idleLayout;
     public GameObject scanLayout;
     // public GameObject lightGameLayout; // not yet implemented
+
+    [Header("Quiz Prompt System")]
+    public GameObject quizPromptPanel;
+
+    [Range(0.1f, 1.0f)]
+    public float startPercentage = 0.5f;   // İlk hedef (%50)
+
+    [Range(0.01f, 0.2f)]
+    public float stepPercentage = 0.05f;   // Artış adımı (%5)
+
+    private float nextTargetRatio;         // Sıradaki hedefi hafızada tutacak
 
     // ============================================================================
     // UI ELEMENTS - SCAN MODE
@@ -109,6 +119,8 @@ public class TabletDisplay : MonoBehaviour
             // Note: using your "0/Total" format
             progressText.text = $"0/{VocabularyManager.Instance.GetTotalCount()}";
         }
+
+        nextTargetRatio = startPercentage;
 
         //Start in idle mode
         SetState(TabletMode.Idle);
@@ -271,28 +283,21 @@ public class TabletDisplay : MonoBehaviour
         // Show pronunciation mode UI
         ShowPronunciationReady();
     }
-    
+
 
     // SCANNING LOOP
     // This is called by the Right Hand Scanner
     public void UpdateDisplay(WordItem item)
     {
         if (isProcessing) return;
-
-        // Lock
         isProcessing = true;
-
-        // Store the current item for later use (e.g., pronunciation mode)
         currentScanItem = item;
-
-        // Switch UI to Scan Mode ---
         SetState(TabletMode.Scanning);
-
 
         StopAllCoroutines();
         if (audioSource) audioSource.Stop();
 
-        //Clean up memory by unloading the previous clip
+        // Ses dosyasını yükleme işlemleri...
         if (currentAudioClip != null)
         {
             Resources.UnloadAsset(currentAudioClip);
@@ -300,72 +305,107 @@ public class TabletDisplay : MonoBehaviour
         }
 
         string audioPath = "Audios/" + item.objectID;
-        Debug.LogWarning($"{audioPath} found");
         currentAudioClip = Resources.Load<AudioClip>(audioPath);
 
-        if (currentAudioClip == null)
-        {
-            Debug.LogWarning($"Audio not found for: {audioPath}");
-            if (listenButton) listenButton.interactable = false; // Disable button
-        }
-        else
-        {
-            if (listenButton) listenButton.interactable = true; // Enable button
-        }
+        if (listenButton != null) listenButton.interactable = (currentAudioClip != null);
 
-        if (listenButton != null)
-        {
-            listenButton.interactable = (currentAudioClip != null);
-        }
-
-
-
-
-
-        //Check whether the object discovered or new 
+        // --- YENİ KEŞİF VE YÜZDE HESAPLAMA KISMI ---
         bool isNew = !SentenceHistoryManager.IsDiscovered(item.objectID);
 
-        if (isNew && newDiscoverySound != null)
+        if (isNew)
         {
             SentenceHistoryManager.MarkAsDiscovered(item.objectID);
-            audioSource.PlayOneShot(newDiscoverySound);
+            if (newDiscoverySound != null) audioSource.PlayOneShot(newDiscoverySound);
+
+            // BURAYA EKLEME YAPIYORUZ: YÜZDE KONTROLÜ
+            CheckProgressForQuiz();
         }
 
-        if (germanLabel != null)
-        {
-            // Get the German word from the scanned item
-            string textToShow = item.germanWord;
-
-            // Update the screen
-            germanLabel.text = textToShow;
-        }
-        else
-        {
-            Debug.LogError("Tablet Error: GermanLabel not linked");
-            isProcessing = false;
-        }
+        if (germanLabel != null) germanLabel.text = item.germanWord;
 
         UpdateProgressUI();
-        // Generate Text
         if (sentenceText) sentenceText.text = "Generating sentence...";
-
-
 
         if (sentenceGenerator != null)
         {
-            // Small function (lambda) that runs when the AI finishes
             sentenceGenerator.RequestSentence(item, (result) =>
             {
                 if (sentenceText) sentenceText.text = result;
-
-                // Unlock when done
                 isProcessing = false;
             });
         }
         else
         {
-            Debug.LogError("SentenceGenerator is not linked");
-            isProcessing = false; // Unlock if we fail so game doesn't freeze
+            isProcessing = false;
+        }
+    }
+
+    // --- YENİ EKLENEN FONKSİYONLAR ---
+
+    void CheckProgressForQuiz()
+    {
+        if (VocabularyManager.Instance == null) return;
+
+        float found = SentenceHistoryManager.GetDiscoveredCount();
+        float total = VocabularyManager.Instance.GetTotalCount();
+
+        if (total == 0) return;
+
+        float currentRatio = found / total;
+
+        // Eğer mevcut oran, sıradaki hedefi geçtiyse (veya eşitse)
+        if (currentRatio >= nextTargetRatio)
+        {
+            ShowQuizPrompt();
+
+            // HEDEFİ YÜKSELT
+            // Örn: 0.50 -> 0.55 -> 0.60
+            while (nextTargetRatio <= currentRatio)
+            {
+                nextTargetRatio += stepPercentage;
+            }
+
+            // %100'ü geçerse tavan yap
+            if (nextTargetRatio > 1.0f) nextTargetRatio = 1.01f;
+        }
+    }
+
+    void ShowQuizPrompt()
+    {
+        if (quizPromptPanel != null)
+        {
+            // 1. Arkadaki Scan Panelini GİZLE
+            if (scanLayout != null) scanLayout.SetActive(false);
+
+            // 2. Quiz Teklif Panelini AÇ
+            quizPromptPanel.SetActive(true);
+
+        }
+    }
+
+    // Butona bağlanacak fonksiyon: Quiz Sahnesine Git
+    public void GoToQuizScene()
+    {
+        // Session verisini güncelle (İsteğe bağlı)
+        if (GameSession.Instance != null)
+        {
+            GameSession.Instance.SelectedLevel = "QuizMode";
+        }
+
+        Debug.Log("Teleporting to Kitchen_Quiz...");
+        SceneManager.LoadScene("Kitchen_Quiz");
+    }
+
+    // "Daha Sonra" / "Back" butonuna bağlı fonksiyon
+    public void CloseQuizPrompt()
+    {
+        if (quizPromptPanel != null)
+        {
+            // 1. Quiz Teklif Panelini GİZLE
+            quizPromptPanel.SetActive(false);
+
+            // 2. Eski Scan Panelini geri GETİR
+            if (scanLayout != null) scanLayout.SetActive(true);
         }
     }
 
