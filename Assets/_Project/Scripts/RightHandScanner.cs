@@ -41,38 +41,38 @@ public class RightHandScanner : MonoBehaviour
 
     void ScanCurrentHover()
     {
-        if (scannerInteractor == null)
-        {
-            Debug.LogError("Scanner Interactor is missing!");
-            return;
-        }
+        if (scannerInteractor == null) return;
 
-        // Get the list of hovered items
         List<IXRHoverInteractable> hoverList = scannerInteractor.interactablesHovered;
-
-   
 
         if (hoverList.Count > 0)
         {
             foreach (var target in hoverList)
             {
-               
-
                 WordItem item = target.transform.GetComponent<WordItem>();
                 if (item == null) item = target.transform.GetComponentInParent<WordItem>();
 
                 if (item != null)
                 {
-                    Debug.Log($"     Found WordItem ID: {item.objectID}");
-                    tablet.UpdateDisplay(item);
-                    return; // Stop after finding the first valid one
-                }
-                else
-                {
-                    Debug.Log("This object has no 'WordItem' script!");
+                    // --- BURASI DEĞİŞTİ ---
+
+                    // 1. Önce Quiz Modunda mıyız diye kontrol et
+                    if (QuizGameManager.Instance != null && QuizGameManager.Instance.IsGameActive)
+                    {
+                        // Quiz modundaysak cevabı QuizManager'a gönder
+                        Debug.Log($"[Quiz] Cevap gönderiliyor: {item.objectID}");
+                        QuizGameManager.Instance.SubmitAnswer(item.objectID);
+                    }
+                    // 2. Değilsek, eski öğrenme moduna (TabletDisplay) devam et
+                    else if (tablet != null)
+                    {
+                        Debug.Log($"[Learn] Kelime gösteriliyor: {item.objectID}");
+                        tablet.UpdateDisplay(item);
+                    }
+
+                    return; // İlk bulduğunda dur
                 }
             }
         }
-       
     }
 }
