@@ -30,6 +30,9 @@ public class QuizGameManager : MonoBehaviour
     public Color correctColor = Color.green;
     public Color penaltyColor = Color.red;
 
+    // --- Music ---
+    [Header("Audio")]
+    public AudioSource challengeMusicSource; // Müzik kaynaðý buraya
     public bool IsGameActive { get; private set; } = false;
     private float currentTime = 0f;
     private List<ItemData> questionQueue = new List<ItemData>();
@@ -65,6 +68,13 @@ public class QuizGameManager : MonoBehaviour
         IsGameActive = true;
         ShowPanel(gamePanel);
         AskNextQuestion();
+
+        // --- start the music ---
+        if (challengeMusicSource != null)
+        {
+            challengeMusicSource.volume = 0.5f; // Ses seviyesini ayarla (isteðe baðlý)
+            challengeMusicSource.Play();
+        }
     }
 
     void PrepareQuestions()
@@ -92,7 +102,6 @@ public class QuizGameManager : MonoBehaviour
             currentTarget = questionQueue[0];
             questionQueue.RemoveAt(0);
             questionText.text = "Find: " + currentTarget.german;
-            feedbackText.text = "";
         }
         else
         {
@@ -131,6 +140,12 @@ public class QuizGameManager : MonoBehaviour
         IsGameActive = false;
         if (finalTimeText) finalTimeText.text = $"Your Time: {currentTime:F1} sec";
         ShowPanel(inputPanel);
+
+        // --- stop the music ---
+        if (challengeMusicSource != null)
+        {
+            challengeMusicSource.Stop();
+        }
     }
 
     public void RestartGame()
