@@ -22,8 +22,8 @@ public class QuizGameManager : MonoBehaviour
     public TextMeshProUGUI finalTimeText;
 
     [Header("Leaderboard List UI")]
-    public Transform leaderboardContainer; // Satýrlarýn dizileceði kutu
-    public GameObject scoreRowPrefab;      // Satýr þablonu
+    public Transform leaderboardContainer; // Satï¿½rlarï¿½n dizileceï¿½i kutu
+    public GameObject scoreRowPrefab;      // Satï¿½r ï¿½ablonu
 
     [Header("Game Settings")]
     public int totalQuestions = 5;
@@ -32,11 +32,16 @@ public class QuizGameManager : MonoBehaviour
 
     // --- Music ---
     [Header("Audio")]
-    public AudioSource challengeMusicSource; // Müzik kaynaðý buraya
+    public AudioSource challengeMusicSource; // Mï¿½zik kaynaï¿½ï¿½ buraya
     public bool IsGameActive { get; private set; } = false;
     private float currentTime = 0f;
     private List<ItemData> questionQueue = new List<ItemData>();
     private ItemData currentTarget;
+    
+    // --- External Challenge Mode ---
+    private bool isExternalChallenge = false;
+    private List<string> externalItemIDs = new List<string>();
+    private bool challengeTimed = true;
 
     void Awake()
     {
@@ -45,7 +50,61 @@ public class QuizGameManager : MonoBehaviour
 
     void Start()
     {
-        ShowPanel(startPanel);
+        // Only show start panel if not using external challenge trigger
+        if (!isExternalChallenge)
+        {
+            ShowPanel(startPanel);
+        }
+    }
+    
+    /// <summary>
+    /// Called by GameFlowController to start challenge from exploration
+    /// </summary>
+    public void StartExternalChallenge(List<string> itemIDs, bool timed)
+    {
+        isExternalChallenge = true;
+        externalItemIDs = new List<string>(itemIDs);
+        challengeTimed = timed;
+        
+        // Skip start panel, go directly to game
+        currentTime = 0f;
+        PrepareExternalQuestions();
+        IsGameActive = true;
+        ShowPanel(gamePanel);
+        AskNextQuestion();
+
+        // Start music
+        if (challengeMusicSource != null)
+        {
+            challengeMusicSource.volume = 0.5f;
+            challengeMusicSource.Play();
+        }
+    }
+    
+    void PrepareExternalQuestions()
+    {
+        if (VocabularyManager.Instance == null) return;
+
+        questionQueue.Clear();
+        
+        // Use only the provided item IDs
+        foreach (string id in externalItemIDs)
+        {
+            ItemData item = VocabularyManager.Instance.GetItem(id);
+            if (item != null)
+            {
+                questionQueue.Add(item);
+            }
+        }
+        
+        // Shuffle
+        for (int i = 0; i < questionQueue.Count; i++)
+        {
+            ItemData temp = questionQueue[i];
+            int randomIndex = Random.Range(i, questionQueue.Count);
+            questionQueue[i] = questionQueue[randomIndex];
+            questionQueue[randomIndex] = temp;
+        }
     }
 
     void Update()
@@ -59,7 +118,7 @@ public class QuizGameManager : MonoBehaviour
         }
     }
 
-    // --- OYUN AKIÞI ---
+    // --- OYUN AKIï¿½I ---
 
     public void StartGame()
     {
@@ -72,7 +131,7 @@ public class QuizGameManager : MonoBehaviour
         // --- start the music ---
         if (challengeMusicSource != null)
         {
-            challengeMusicSource.volume = 0.5f; // Ses seviyesini ayarla (isteðe baðlý)
+            challengeMusicSource.volume = 0.5f; // Ses seviyesini ayarla (isteï¿½e baï¿½lï¿½)
             challengeMusicSource.Play();
         }
     }
@@ -83,7 +142,7 @@ public class QuizGameManager : MonoBehaviour
 
         List<ItemData> allItems = new List<ItemData>(VocabularyManager.Instance.database.Values);
 
-        // Karýþtýr
+        // Karï¿½ï¿½tï¿½r
         for (int i = 0; i < allItems.Count; i++)
         {
             ItemData temp = allItems[i];
@@ -139,13 +198,41 @@ public class QuizGameManager : MonoBehaviour
     {
         IsGameActive = false;
         if (finalTimeText) finalTimeText.text = $"Your Time: {currentTime:F1} sec";
-        ShowPanel(inputPanel);
-
+        
         // --- stop the music ---
         if (challengeMusicSource != null)
         {
             challengeMusicSource.Stop();
         }
+        
+        // If external challenge, notify GameFlowController instead of showing leaderboard
+        if (isExternalChallenge)
+        {
+            GameFlowController.Instance?.OnFindChallengeComplete(currentTime);
+            isExternalChallenge = false;
+            ShowPanel(null); // Hide all panels
+        }
+        else
+        {
+            ShowPanel(inputPanel);
+        }
+    }
+    
+    /// <summary>
+    /// Called by GameFlowController to cancel the challenge
+    /// </summary>
+    public void CancelChallenge()
+    {
+        IsGameActive = false;
+        isExternalChallenge = false;
+        
+        if (challengeMusicSource != null)
+        {
+            challengeMusicSource.Stop();
+        }
+        
+        ShowPanel(null);
+        GameFlowController.Instance?.OnFindChallengeCancelled();
     }
 
     public void RestartGame()
@@ -153,7 +240,7 @@ public class QuizGameManager : MonoBehaviour
         ShowPanel(startPanel);
     }
 
-    // --- SKOR VE LÝDERLÝK TABLOSU ---
+    // --- SKOR VE Lï¿½DERLï¿½K TABLOSU ---
 
     public void SubmitScore()
     {
@@ -167,7 +254,7 @@ public class QuizGameManager : MonoBehaviour
 
     public void UpdateLeaderboardDisplay()
     {
-        // 1. Önceki listeyi temizle
+        // 1. ï¿½nceki listeyi temizle
         foreach (Transform child in leaderboardContainer)
         {
             Destroy(child.gameObject);
@@ -175,21 +262,21 @@ public class QuizGameManager : MonoBehaviour
 
         LeaderboardData data = LeaderboardManager.Instance.LoadScores();
 
-        // 2. Yeni listeyi oluþtur
+        // 2. Yeni listeyi oluï¿½tur
         for (int i = 0; i < data.scores.Count; i++)
         {
             GameObject row = Instantiate(scoreRowPrefab, leaderboardContainer);
 
-            // DÝKKAT: Burada i deðerini fonksiyona parametre olarak atýyoruz.
-            // Bu sayede Closure (deðiþken karýþma) problemi imkansýz hale geliyor.
+            // Dï¿½KKAT: Burada i deï¿½erini fonksiyona parametre olarak atï¿½yoruz.
+            // Bu sayede Closure (deï¿½iï¿½ken karï¿½ï¿½ma) problemi imkansï¿½z hale geliyor.
             SetupScoreRow(row, i, data.scores[i]);
         }
     }
 
-    // Yardýmcý fonksiyon: Her satýrý ve butonu izole eder
+    // Yardï¿½mcï¿½ fonksiyon: Her satï¿½rï¿½ ve butonu izole eder
     void SetupScoreRow(GameObject rowObj, int index, ScoreEntry entry)
     {
-        // Yazýyý Ayarla
+        // Yazï¿½yï¿½ Ayarla
         TextMeshProUGUI[] texts = rowObj.GetComponentsInChildren<TextMeshProUGUI>();
         if (texts.Length >= 1)
         {
@@ -200,13 +287,13 @@ public class QuizGameManager : MonoBehaviour
         Button deleteBtn = rowObj.GetComponentInChildren<Button>();
         if (deleteBtn != null)
         {
-            // Eski baðlantýlarý temizle
+            // Eski baï¿½lantï¿½larï¿½ temizle
             deleteBtn.onClick.RemoveAllListeners();
 
-            // Yeni silme emrini ver (index deðeri burada sabitlenmiþtir)
+            // Yeni silme emrini ver (index deï¿½eri burada sabitlenmiï¿½tir)
             deleteBtn.onClick.AddListener(() =>
             {
-                Debug.Log($"[QuizManager] Silme butonuna basýldý. Silinecek index: {index}");
+                Debug.Log($"[QuizManager] Silme butonuna basï¿½ldï¿½. Silinecek index: {index}");
                 DeleteSingleScore(index-1);
             });
         }
@@ -214,7 +301,7 @@ public class QuizGameManager : MonoBehaviour
 
     public void DeleteSingleScore(int index)
     {
-        Debug.Log($"[QuizManager] DeleteSingleScore çalýþtý. Index: {index}");
+        Debug.Log($"[QuizManager] DeleteSingleScore ï¿½alï¿½ï¿½tï¿½. Index: {index}");
         LeaderboardManager.Instance.DeleteScoreAtIndex(index);
         UpdateLeaderboardDisplay(); // Listeyi yenile
     }
@@ -225,7 +312,7 @@ public class QuizGameManager : MonoBehaviour
         UpdateLeaderboardDisplay();
     }
 
-    // --- PANEL YÖNETÝMÝ ---
+    // --- PANEL Yï¿½NETï¿½Mï¿½ ---
 
     void ShowPanel(GameObject panelToShow)
     {

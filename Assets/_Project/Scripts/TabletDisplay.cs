@@ -353,21 +353,23 @@ public class TabletDisplay : MonoBehaviour
 
         float currentRatio = found / total;
 
-        // Eğer mevcut oran, sıradaki hedefi geçtiyse (veya eşitse)
+        // NEW: Notify GameFlowController for 50% and 90% triggers
+        // This handles the new integrated challenge flow
+        GameFlowController.Instance?.OnObjectDiscovered(currentScanItem?.objectID);
+
+        // OLD SYSTEM DISABLED - Using GameFlowController instead
+        // Old 5% step prompt system is now replaced by GameFlowController
+        /*
         if (currentRatio >= nextTargetRatio)
         {
             ShowQuizPrompt();
-
-            // HEDEFİ YÜKSELT
-            // Örn: 0.50 -> 0.55 -> 0.60
             while (nextTargetRatio <= currentRatio)
             {
                 nextTargetRatio += stepPercentage;
             }
-
-            // %100'ü geçerse tavan yap
             if (nextTargetRatio > 1.0f) nextTargetRatio = 1.01f;
         }
+        */
     }
 
     void ShowQuizPrompt()
@@ -393,7 +395,7 @@ public class TabletDisplay : MonoBehaviour
         }
 
         Debug.Log("Teleporting to Kitchen_Quiz...");
-        SceneManager.LoadScene("Kitchen_Quiz");
+        SceneManager.LoadScene("Kitchen_Articel_Quiz");
     }
 
     // "Daha Sonra" / "Back" butonuna bağlı fonksiyon
@@ -953,5 +955,172 @@ public class TabletDisplay : MonoBehaviour
         {
             button.interactable = interactable;
         }
+    }
+
+    // ============================================================================
+    // GAME FLOW INTEGRATION - Find Challenge & Cleaning Challenge
+    // ============================================================================
+
+    [Header("Game Flow Panels")]
+    public GameObject findChallengePromptPanel;
+    public GameObject cleaningChallengePromptPanel;
+    public GameObject cleaningModePanel;
+    public TextMeshProUGUI cleaningProgressText;
+    public TextMeshProUGUI messageText;
+
+    private System.Action onFindChallengeAccept;
+    private System.Action onFindChallengeDecline;
+    private System.Action onCleaningChallengeAccept;
+    private System.Action onCleaningChallengeDecline;
+
+    /// <summary>
+    /// Shows FindObjectQuiz challenge prompt at 50%
+    /// </summary>
+    public void ShowFindChallengePrompt(System.Action onAccept, System.Action onDecline)
+    {
+        onFindChallengeAccept = onAccept;
+        onFindChallengeDecline = onDecline;
+
+        if (findChallengePromptPanel != null)
+        {
+            // Hide scan layout
+            if (scanLayout != null) scanLayout.SetActive(false);
+            if (idleLayout != null) idleLayout.SetActive(false);
+
+            // Show find challenge prompt
+            findChallengePromptPanel.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Called by UI button - Accept Find Challenge
+    /// </summary>
+    public void OnAcceptFindChallenge()
+    {
+        if (findChallengePromptPanel != null)
+            findChallengePromptPanel.SetActive(false);
+        onFindChallengeAccept?.Invoke();
+    }
+
+    /// <summary>
+    /// Called by UI button - Decline Find Challenge
+    /// </summary>
+    public void OnDeclineFindChallenge()
+    {
+        if (findChallengePromptPanel != null)
+            findChallengePromptPanel.SetActive(false);
+        // Restore scan layout
+        if (scanLayout != null) scanLayout.SetActive(true);
+        onFindChallengeDecline?.Invoke();
+    }
+
+    /// <summary>
+    /// Shows Cleaning Challenge prompt at 90%
+    /// </summary>
+    public void ShowCleaningChallengePrompt(System.Action onAccept, System.Action onDecline)
+    {
+        onCleaningChallengeAccept = onAccept;
+        onCleaningChallengeDecline = onDecline;
+
+        if (cleaningChallengePromptPanel != null)
+        {
+            // Hide all other layouts
+            if (scanLayout != null) scanLayout.SetActive(false);
+            if (idleLayout != null) idleLayout.SetActive(false);
+
+            // Show cleaning challenge prompt
+            cleaningChallengePromptPanel.SetActive(true);
+        }
+    }
+
+    /// <summary>
+    /// Called by UI button - Accept Cleaning Challenge
+    /// </summary>
+    public void OnAcceptCleaningChallenge()
+    {
+        if (cleaningChallengePromptPanel != null)
+            cleaningChallengePromptPanel.SetActive(false);
+        onCleaningChallengeAccept?.Invoke();
+    }
+
+    /// <summary>
+    /// Called by UI button - Decline Cleaning Challenge
+    /// </summary>
+    public void OnDeclineCleaningChallenge()
+    {
+        if (cleaningChallengePromptPanel != null)
+            cleaningChallengePromptPanel.SetActive(false);
+        // Restore scan layout
+        if (scanLayout != null) scanLayout.SetActive(true);
+        onCleaningChallengeDecline?.Invoke();
+    }
+
+    /// <summary>
+    /// Switches tablet to Cleaning Mode UI (shows progress only, no scan UI)
+    /// </summary>
+    public void EnterCleaningMode(int totalObjects)
+    {
+        // Hide all normal layouts
+        if (idleLayout != null) idleLayout.SetActive(false);
+        if (scanLayout != null) scanLayout.SetActive(false);
+        if (quizPromptPanel != null) quizPromptPanel.SetActive(false);
+
+        // Show cleaning mode panel
+        if (cleaningModePanel != null)
+        {
+            cleaningModePanel.SetActive(true);
+            UpdateCleaningProgress(0, totalObjects);
+        }
+    }
+
+    /// <summary>
+    /// Updates the cleaning progress display
+    /// </summary>
+    public void UpdateCleaningProgress(int cleaned, int total)
+    {
+        if (cleaningProgressText != null)
+        {
+            cleaningProgressText.text = $"Cleaned: {cleaned}/{total}";
+        }
+    }
+
+    /// <summary>
+    /// Shows completion message after cleaning
+    /// </summary>
+    public void ShowCleaningComplete()
+    {
+        if (cleaningModePanel != null)
+            cleaningModePanel.SetActive(false);
+        
+        ShowMessage("Kitchen Cleaned!\nReturning to Main Menu...");
+    }
+
+    /// <summary>
+    /// Shows a temporary message on the tablet
+    /// </summary>
+    public void ShowMessage(string message)
+    {
+        if (messageText != null)
+        {
+            messageText.text = message;
+            messageText.gameObject.SetActive(true);
+        }
+        else if (sentenceText != null)
+        {
+            sentenceText.text = message;
+        }
+    }
+
+    /// <summary>
+    /// Returns to normal exploration mode UI
+    /// </summary>
+    public void ReturnToExplorationMode()
+    {
+        if (cleaningModePanel != null) cleaningModePanel.SetActive(false);
+        if (findChallengePromptPanel != null) findChallengePromptPanel.SetActive(false);
+        if (cleaningChallengePromptPanel != null) cleaningChallengePromptPanel.SetActive(false);
+        if (messageText != null) messageText.gameObject.SetActive(false);
+        
+        SetState(TabletMode.Idle);
     }
 }

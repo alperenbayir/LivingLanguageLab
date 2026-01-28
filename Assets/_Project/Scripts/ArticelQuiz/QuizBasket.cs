@@ -6,7 +6,7 @@ public class QuizBasket : MonoBehaviour
     public string acceptedArticle; // "Der", "Die" veya "Das"
 
     [Header("Lights for THIS Basket")]
-    // Her sepet kendi tepesindeki ýþýðý bilecek
+    // Her sepet kendi tepesindeki ï¿½ï¿½ï¿½ï¿½ï¿½ bilecek
     public GameObject myGreenLight;
     public GameObject myRedLight;
 
@@ -18,7 +18,7 @@ public class QuizBasket : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Ýçine giren objede WordItem scripti var mý?
+        // ï¿½ï¿½ine giren objede WordItem scripti var mï¿½?
         WordItem item = other.GetComponent<WordItem>();
 
         if (item == null)
@@ -26,11 +26,20 @@ public class QuizBasket : MonoBehaviour
 
         if (item != null)
         {
-            // Manager'a sorarken kendi ýþýklarýmýzý da gönderiyoruz
-            // "Bu obje bana geldi, bu da benim ýþýklarým, kontrol et" diyoruz.
+            // Check if we're in cleaning mode (ArticleCleaningController handles it)
+            if (ArticleCleaningController.Instance != null && 
+                ArticleCleaningController.Instance.IsCleaningMode())
+            {
+                // Route to ArticleCleaningController
+                ArticleCleaningController.Instance.OnObjectInToilet(item, acceptedArticle);
+                return;
+            }
+
+            // Manager'a sorarken kendi ï¿½ï¿½ï¿½klarï¿½mï¿½zï¿½ da gï¿½nderiyoruz
+            // "Bu obje bana geldi, bu da benim ï¿½ï¿½ï¿½klarï¿½m, kontrol et" diyoruz.
             QuizManager.Instance.CheckAnswer(item.objectID, acceptedArticle, myGreenLight, myRedLight);
 
-            // Objeyi yok edebiliriz (Ýsteðe baðlý)
+            // Objeyi yok edebiliriz (ï¿½steï¿½e baï¿½lï¿½)
             // Destroy(other.gameObject, 0.5f); 
         }
     }
