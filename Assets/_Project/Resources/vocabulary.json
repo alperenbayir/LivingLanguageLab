@@ -399,6 +399,30 @@
       "english": "The Chocolate Bar",
       "audioFileName": "chocolate-bar",
       "sentence": ""
+    },
+    {
+      "id": "bread",
+      "article_only": "Das",
+      "german": "Das Brot",
+      "english": "The Bread",
+      "audioFileName": "bread",
+      "sentence": ""
+    },
+    {
+      "id": "cheese",
+      "article_only": "Der",
+      "german": "Der Käse",
+      "english": "The Cheese",
+      "audioFileName": "cheese",
+      "sentence": ""
+    },
+    {
+      "id": "pizza",
+      "article_only": "Die",
+      "german": "Die Pizza",
+      "english": "The Pizza",
+      "audioFileName": "pizza",
+      "sentence": ""
     }
   ]
 }
