@@ -25,6 +25,9 @@ public class QuizGameManager : MonoBehaviour
     public Transform leaderboardContainer; // Sat�rlar�n dizilece�i kutu
     public GameObject scoreRowPrefab;      // Sat�r �ablonu
 
+    [Header("Name Input (Pre-filled 'Player')")]
+    public string defaultPlayerName = "Player";
+
     [Header("Game Settings")]
     public int totalQuestions = 5;
     public Color correctColor = Color.green;
@@ -50,11 +53,10 @@ public class QuizGameManager : MonoBehaviour
 
     void Start()
     {
-        // Only show start panel if not using external challenge trigger
-        if (!isExternalChallenge)
-        {
-            ShowPanel(startPanel);
-        }
+        // Don't auto-show any panel - wait for explicit start
+        // Standalone mode: call StartGame() from a button
+        // Integrated mode: GameFlowController calls StartExternalChallenge()
+        ShowPanel(null); // Hide all panels at start
     }
     
     /// <summary>
@@ -65,6 +67,9 @@ public class QuizGameManager : MonoBehaviour
         isExternalChallenge = true;
         externalItemIDs = new List<string>(itemIDs);
         challengeTimed = timed;
+        
+        // Re-enable scanning so player can find objects during challenge
+        RightHandScanner.CanScan = true;
         
         // Skip start panel, go directly to game
         currentTime = 0f;
@@ -177,12 +182,19 @@ public class QuizGameManager : MonoBehaviour
             currentTime -= 2f;
             if (currentTime < 0) currentTime = 0;
             StartCoroutine(ShowFeedback("Correct! (-2 sec)", correctColor));
+            
+            // Play correct sound
+            RightHandScanner.Instance?.PlayFeedbackSound(true);
+            
             AskNextQuestion();
         }
         else
         {
             currentTime += 5f;
             StartCoroutine(ShowFeedback("Wrong! (+5 sec)", penaltyColor));
+            
+            // Play wrong sound
+            RightHandScanner.Instance?.PlayFeedbackSound(false);
         }
     }
 
@@ -205,17 +217,65 @@ public class QuizGameManager : MonoBehaviour
             challengeMusicSource.Stop();
         }
         
-        // If external challenge, notify GameFlowController instead of showing leaderboard
-        if (isExternalChallenge)
+        // Lock scanning while in InputPanel (prevent scan/layout overlap)
+        RightHandScanner.CanScan = false;
+        
+        // Show InputPanel first for name entry (pre-filled with "Player")
+        SetupNameInput();
+        ShowPanel(inputPanel);
+    }
+    
+    /// <summary>
+    /// Called by EndPanel retry button - play again
+    /// </summary>
+    public void OnRetryChallenge()
+    {
+        Debug.Log("[QuizGameManager] Retry clicked - restarting challenge");
+        // Fully reset state
+        currentTime = 0f;
+        questionQueue.Clear();
+        currentTarget = null;
+        feedbackText.text = "";
+        
+        // Start fresh (EndPanel hid the panel, now restart challenge)
+        StartExternalChallenge(externalItemIDs, challengeTimed);
+    }
+    
+    /// <summary>
+    /// Scan any object to dismiss EndPanel and return to exploration
+    /// </summary>
+    public void OnContinueExploring()
+    {
+        Debug.Log("[QuizGameManager] Continue triggered");
+        ReturnToExploration();
+    }
+    
+    /// <summary>
+    /// Call this from RightHandScanner when player scans during EndPanel
+    /// </summary>
+    public bool TryDismissEndPanel()
+    {
+        // Only works if EndPanel is currently showing
+        if (endPanel != null && endPanel.activeSelf && isExternalChallenge)
         {
-            GameFlowController.Instance?.OnFindChallengeComplete(currentTime);
-            isExternalChallenge = false;
-            ShowPanel(null); // Hide all panels
+            Debug.Log("[QuizGameManager] Scan detected during EndPanel - dismissing");
+            ReturnToExploration();
+            return true; // Tell scanner we handled it
         }
-        else
-        {
-            ShowPanel(inputPanel);
-        }
+        return false; // Let scanner process normally
+    }
+    
+    void ReturnToExploration()
+    {
+        // Re-enable scanning for exploration
+        RightHandScanner.CanScan = true;
+        
+        // Hide end panel
+        ShowPanel(null);
+        
+        // Notify GameFlowController that challenge is done
+        isExternalChallenge = false;
+        GameFlowController.Instance?.OnFindChallengeComplete(currentTime);
     }
     
     /// <summary>
@@ -242,35 +302,89 @@ public class QuizGameManager : MonoBehaviour
 
     // --- SKOR VE L�DERL�K TABLOSU ---
 
+    /// <summary>
+    /// Call this when showing InputPanel to pre-fill name
+    /// </summary>
+    public void SetupNameInput()
+    {
+        if (nameInput != null)
+        {
+            nameInput.text = defaultPlayerName;
+        }
+    }
+    
     public void SubmitScore()
     {
-        string playerName = nameInput.text;
-        if (string.IsNullOrEmpty(playerName)) playerName = "Player";
-
-        LeaderboardManager.Instance.SaveScore(playerName, currentTime);
-        UpdateLeaderboardDisplay();
+        // Get name from input (default is "Player", user can change if VR keyboard added)
+        string playerName = defaultPlayerName;
+        if (nameInput != null && !string.IsNullOrEmpty(nameInput.text))
+        {
+            playerName = nameInput.text;
+        }
+        
+        // Save score
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.SaveScore(playerName, currentTime);
+            Debug.Log($"[QuizGameManager] Saved score for {playerName}: {currentTime:F1} sec");
+        }
+        
+        // Re-enable scanning for EndPanel (scan-to-continue feature)
+        RightHandScanner.CanScan = true;
+        
+        // Show EndPanel with leaderboard
         ShowPanel(endPanel);
+        
+        // Update leaderboard display after panel is active
+        UpdateLeaderboardDisplay();
     }
 
     public void UpdateLeaderboardDisplay()
     {
-        // 1. �nceki listeyi temizle
+        Debug.Log("[QuizGameManager] UpdateLeaderboardDisplay called");
+        
+        if (leaderboardContainer == null)
+        {
+            Debug.LogError("[QuizGameManager] leaderboardContainer is NULL! Check QuizGameManager inspector.");
+            return;
+        }
+        if (scoreRowPrefab == null)
+        {
+            Debug.LogError("[QuizGameManager] scoreRowPrefab is NULL! Assign ScoreRowTemplate prefab.");
+            return;
+        }
+        if (LeaderboardManager.Instance == null)
+        {
+            Debug.LogError("[QuizGameManager] LeaderboardManager.Instance is NULL! Add LeaderboardManager to scene.");
+            return;
+        }
+        
+        Debug.Log($"[QuizGameManager] leaderboardContainer: {leaderboardContainer.name}, scoreRowPrefab: {scoreRowPrefab.name}");
+        
+        // 1. Clear previous list
         foreach (Transform child in leaderboardContainer)
         {
             Destroy(child.gameObject);
         }
 
         LeaderboardData data = LeaderboardManager.Instance.LoadScores();
+        Debug.Log($"[QuizGameManager] Loaded {data.scores.Count} scores from leaderboard");
 
-        // 2. Yeni listeyi olu�tur
+        if (data.scores.Count == 0)
+        {
+            Debug.Log("[QuizGameManager] No scores to display");
+            return;
+        }
+
+        // 2. Create new list
         for (int i = 0; i < data.scores.Count; i++)
         {
+            Debug.Log($"[QuizGameManager] Creating row {i+1}: {data.scores[i].playerName} - {data.scores[i].timeScore}");
             GameObject row = Instantiate(scoreRowPrefab, leaderboardContainer);
-
-            // D�KKAT: Burada i de�erini fonksiyona parametre olarak at�yoruz.
-            // Bu sayede Closure (de�i�ken kar��ma) problemi imkans�z hale geliyor.
             SetupScoreRow(row, i, data.scores[i]);
         }
+        
+        Debug.Log("[QuizGameManager] Leaderboard display updated successfully");
     }
 
     // Yard�mc� fonksiyon: Her sat�r� ve butonu izole eder
@@ -308,20 +422,35 @@ public class QuizGameManager : MonoBehaviour
 
     public void ClearAllLeaderboard()
     {
-        LeaderboardManager.Instance.ClearAllScores();
-        UpdateLeaderboardDisplay();
+        Debug.Log("[QuizGameManager] Clear All clicked - clearing scores");
+        if (LeaderboardManager.Instance != null)
+        {
+            LeaderboardManager.Instance.ClearAllScores();
+            Debug.Log("[QuizGameManager] Scores cleared, refreshing display");
+            UpdateLeaderboardDisplay();
+        }
+        else
+        {
+            Debug.LogError("[QuizGameManager] LeaderboardManager.Instance is null!");
+        }
     }
 
     // --- PANEL Y�NET�M� ---
 
     void ShowPanel(GameObject panelToShow)
     {
+        Debug.Log($"[QuizGameManager] ShowPanel called: {(panelToShow != null ? panelToShow.name : "NULL (hide all)")}");
+        
         if (startPanel) startPanel.SetActive(false);
         if (gamePanel) gamePanel.SetActive(false);
         if (inputPanel) inputPanel.SetActive(false);
         if (endPanel) endPanel.SetActive(false);
 
-        if (panelToShow) panelToShow.SetActive(true);
+        if (panelToShow) 
+        {
+            panelToShow.SetActive(true);
+            Debug.Log($"[QuizGameManager] Panel {panelToShow.name} is now ACTIVE");
+        }
     }
 
     public void CloseQuiz()

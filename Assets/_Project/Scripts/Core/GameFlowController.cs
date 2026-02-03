@@ -14,7 +14,7 @@ public class GameFlowController : MonoBehaviour
 
     [Header("Phase Settings")]
     [Range(0.3f, 0.6f)]
-    public float findChallengeThreshold = 0.5f; // 50%
+    public float findChallengeThreshold = 0.1f; // 10%
     [Range(0.7f, 0.95f)]
     public float cleaningThreshold = 0.9f; // 90%
 
@@ -27,10 +27,18 @@ public class GameFlowController : MonoBehaviour
     public Transform toiletsParent; // Parent containing Der/Die/Das toilets
     public Transform cleaningSpawnArea; // Area to gather objects initially
 
-    [Header("Audio Placeholders")]
+    [Header("Audio")]
     public AudioSource ambientAudioSource;
+    public AudioClip ambientMusicClip;
     public AudioClip challengeMusicClip;
     public AudioClip flushSoundClip;
+    
+    [Header("Lighting")]
+    public Light mainLight;
+    public float normalLightIntensity = 1f;
+    public float challengeLightIntensity = 0.3f;
+    public Color normalLightColor = Color.white;
+    public Color challengeLightColor = new Color(0.8f, 0.6f, 1f); // Slight purple tint
 
     [Header("References")]
     public TabletDisplay tabletDisplay;
@@ -38,13 +46,17 @@ public class GameFlowController : MonoBehaviour
     public RightHandScanner rightHandScanner;
 
     // Internal state
-    private bool findChallengeOffered = false;
     private bool findChallengeCompleted = false;
     private bool cleaningChallengeStarted = false;
     private GamePhase currentPhase = GamePhase.Exploration;
     private List<WordItem> discoveredItems = new List<WordItem>();
     private List<WordItem> cleaningObjects = new List<WordItem>();
     private int cleanedCount = 0;
+    
+    // Progress tracking for Find Challenge offers
+    private float lastOfferedProgress = 0f;
+    private float offerInterval = 0.15f; // Offer every 15%
+    private bool isWaitingForResponse = false; // Prevent overlapping prompts
 
     public enum GamePhase
     {
@@ -61,6 +73,11 @@ public class GameFlowController : MonoBehaviour
 
     void Start()
     {
+        // Clear old leaderboard data for fresh session (VR demo - new players each time)
+        PlayerPrefs.DeleteKey("KitchenQuizLeaderboard");
+        PlayerPrefs.Save();
+        Debug.Log("[GameFlow] Leaderboard cleared - fresh session started!");
+        
         // Validate references
         if (tabletDisplay == null)
             tabletDisplay = FindObjectOfType<TabletDisplay>();
@@ -70,6 +87,15 @@ public class GameFlowController : MonoBehaviour
             rightHandScanner = FindObjectOfType<RightHandScanner>();
 
         currentPhase = GamePhase.Exploration;
+        
+        // Start ambient music
+        if (ambientAudioSource != null && ambientMusicClip != null)
+        {
+            ambientAudioSource.clip = ambientMusicClip;
+            ambientAudioSource.volume = 0.5f;
+            ambientAudioSource.loop = true;
+            ambientAudioSource.Play();
+        }
     }
 
     /// <summary>
@@ -77,19 +103,32 @@ public class GameFlowController : MonoBehaviour
     /// </summary>
     public void OnObjectDiscovered(string objectID)
     {
-        if (currentPhase == GamePhase.CleaningChallengeActive) return;
+        // Don't interrupt if challenge is active or waiting for response
+        if (currentPhase == GamePhase.FindChallengeActive || 
+            currentPhase == GamePhase.CleaningChallengeActive ||
+            isWaitingForResponse)
+        {
+            return;
+        }
 
         float progress = GetDiscoveryProgress();
-
-        // Check for Find Challenge trigger (50%)
-        if (!findChallengeOffered && progress >= findChallengeThreshold)
+        float currentMilestone = Mathf.Floor(progress / offerInterval) * offerInterval;
+        
+        // Check for Find Challenge trigger at each milestone (15%, 30%, 45%, 60%, 75%)
+        if (!findChallengeCompleted && progress < cleaningThreshold)
         {
-            findChallengeOffered = true;
-            OfferFindChallenge();
+            // Only offer if we've reached a NEW milestone
+            if (currentMilestone > lastOfferedProgress)
+            {
+                Debug.Log($"[GameFlow] Triggering Find Challenge at {currentMilestone:P0}");
+                lastOfferedProgress = currentMilestone;
+                OfferFindChallenge();
+            }
         }
-        // Check for Cleaning Challenge trigger (90%)
+        // Check for Cleaning Challenge trigger (90%) - only once
         else if (!cleaningChallengeStarted && progress >= cleaningThreshold && findChallengeCompleted)
         {
+            Debug.Log("[GameFlow] Triggering Cleaning Challenge at 90%");
             OfferCleaningChallenge();
         }
     }
@@ -106,18 +145,34 @@ public class GameFlowController : MonoBehaviour
 
     void OfferFindChallenge()
     {
-        Debug.Log("[GameFlow] Offering Find Challenge at 50%");
+        Debug.Log($"[GameFlow] Offering Find Challenge at ~{lastOfferedProgress:P0}");
+        
+        // Set flag to prevent multiple prompts
+        isWaitingForResponse = true;
+        
+        // Disable scanning during prompt
+        RightHandScanner.CanScan = false;
         
         // Dim lights and start music
         StartChallengeAtmosphere();
 
         // Show offer on tablet
         tabletDisplay.ShowFindChallengePrompt(
-            onAccept: StartFindChallenge,
+            onAccept: () => {
+                isWaitingForResponse = false;
+                // Scanning stays disabled, challenge starts
+                StartFindChallenge();
+            },
             onDecline: () => {
                 Debug.Log("[GameFlow] Find Challenge declined");
-                // Will re-offer on next discovery
-                findChallengeOffered = false;
+                isWaitingForResponse = false;
+                EndChallengeAtmosphere();
+                // Re-enable scanning
+                RightHandScanner.CanScan = true;
+                // Return to exploration mode
+                if (tabletDisplay != null)
+                    tabletDisplay.ReturnToExplorationMode();
+                // Will re-offer at next 15% milestone (not immediately)
             }
         );
     }
@@ -126,6 +181,9 @@ public class GameFlowController : MonoBehaviour
     {
         Debug.Log("[GameFlow] Starting Find Challenge");
         currentPhase = GamePhase.FindChallengeActive;
+        
+        // Re-enable scanning so player can find objects
+        RightHandScanner.CanScan = true;
 
         // Get discovered items
         List<string> discoveredIDs = GetDiscoveredItemIDs();
@@ -141,23 +199,35 @@ public class GameFlowController : MonoBehaviour
     {
         Debug.Log($"[GameFlow] Find Challenge complete! Time: {finalTime:F1}s");
         findChallengeCompleted = true;
+        isWaitingForResponse = false;
         currentPhase = GamePhase.Exploration;
 
         // Restore atmosphere
         EndChallengeAtmosphere();
+        
+        // Re-enable scanning for exploration mode
+        RightHandScanner.CanScan = true;
 
-        // Player can continue exploring
-        tabletDisplay.ShowMessage("Challenge complete! Continue exploring...");
+        // Return to exploration mode on tablet
+        if (tabletDisplay != null)
+        {
+            tabletDisplay.ReturnToExplorationMode();
+            tabletDisplay.ShowMessage($"Challenge complete! Time: {finalTime:F1}s\nContinue exploring...");
+        }
     }
 
     public void OnFindChallengeCancelled()
     {
         Debug.Log("[GameFlow] Find Challenge cancelled");
+        isWaitingForResponse = false;
         currentPhase = GamePhase.Exploration;
         EndChallengeAtmosphere();
         
-        // Re-offer later
-        findChallengeOffered = false;
+        // Return to exploration mode
+        if (tabletDisplay != null)
+        {
+            tabletDisplay.ReturnToExplorationMode();
+        }
     }
 
     #endregion
@@ -168,15 +238,24 @@ public class GameFlowController : MonoBehaviour
     {
         Debug.Log("[GameFlow] Offering Cleaning Challenge at 90%");
         
+        // Set flag to prevent other prompts
+        isWaitingForResponse = true;
+        
         // Dramatic atmosphere
         StartChallengeAtmosphere();
 
         // Auto-start or show big prompt
         tabletDisplay.ShowCleaningChallengePrompt(
-            onAccept: StartCleaningChallenge,
+            onAccept: () => {
+                isWaitingForResponse = false;
+                StartCleaningChallenge();
+            },
             onDecline: () => {
-                // Can continue to 100%, offer again later
                 Debug.Log("[GameFlow] Cleaning Challenge delayed");
+                isWaitingForResponse = false;
+                EndChallengeAtmosphere();
+                if (tabletDisplay != null)
+                    tabletDisplay.ReturnToExplorationMode();
             }
         );
     }
@@ -306,24 +385,50 @@ public class GameFlowController : MonoBehaviour
 
     void StartChallengeAtmosphere()
     {
-        // Dim lights (you can connect to your lighting system here)
         Debug.Log("[GameFlow] Dimming lights, starting challenge music");
         
-        if (challengeMusicClip != null && ambientAudioSource != null)
+        // Dim the lights
+        if (mainLight != null)
         {
-            ambientAudioSource.clip = challengeMusicClip;
-            ambientAudioSource.Play();
+            mainLight.intensity = challengeLightIntensity;
+            mainLight.color = challengeLightColor;
+        }
+        
+        // Switch to challenge music
+        if (ambientAudioSource != null)
+        {
+            ambientAudioSource.Stop();
+            if (challengeMusicClip != null)
+            {
+                ambientAudioSource.clip = challengeMusicClip;
+                ambientAudioSource.volume = 0.7f;
+                ambientAudioSource.Play();
+            }
         }
     }
 
     void EndChallengeAtmosphere()
     {
-        // Restore lights and ambient audio
         Debug.Log("[GameFlow] Restoring atmosphere");
         
+        // Restore normal lighting
+        if (mainLight != null)
+        {
+            mainLight.intensity = normalLightIntensity;
+            mainLight.color = normalLightColor;
+        }
+        
+        // Return to ambient music
         if (ambientAudioSource != null)
         {
             ambientAudioSource.Stop();
+            if (ambientMusicClip != null)
+            {
+                ambientAudioSource.clip = ambientMusicClip;
+                ambientAudioSource.volume = 0.5f;
+                ambientAudioSource.loop = true;
+                ambientAudioSource.Play();
+            }
         }
     }
 

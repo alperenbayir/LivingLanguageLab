@@ -9,16 +9,35 @@ using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
 public class RightHandScanner : MonoBehaviour
 {
+    public static RightHandScanner Instance;
+    
     [Header("UI Connection")]
     public TabletDisplay tablet;
     public InputActionProperty scanButton; // The button you press (e.g., Trigger)
 
    
     [Header("Interaction Setup")]
-    // We use XRBaseInteractor because 'NearFarInteractor' inherits from it.
+    // We use XRbaseInteractor because 'NearFarInteractor' inherits from it.
     // This allows you to drag your Near-Far object directly into this slot.
     public XRBaseInteractor scannerInteractor;
+    
+    [Header("Audio")]
+    public AudioSource scanAudioSource;
+    public AudioClip scanSound;
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
+    
+    // Static flag to disable scanning during challenges
+    public static bool CanScan = true;
+    
+    // Hover tracking
+    private WordItem currentHoveredItem = null;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+    
     void Start()
     {
         // Auto-find logic
@@ -28,7 +47,19 @@ public class RightHandScanner : MonoBehaviour
 
     void Update()
     {
-        if (tablet.isProcessing) return; // lock the interaction if the tablet is active.
+        if (!CanScan) 
+        {
+            ClearHoverHighlight();
+            return; // Scanner locked during prompts/end panel
+        }
+        if (tablet.isProcessing) 
+        {
+            ClearHoverHighlight();
+            return; // lock the interaction if the tablet is active.
+        }
+        
+        // Handle hover highlighting
+        UpdateHoverHighlight();
 
 
         if (scanButton.action.WasPressedThisFrame())
@@ -54,25 +85,123 @@ public class RightHandScanner : MonoBehaviour
 
                 if (item != null)
                 {
-                    // --- BURASI DEĞİŞTİ ---
-
-                    // 1. Önce Quiz Modunda mıyız diye kontrol et
+                    // --- CHECK 1: Are we in EndPanel? If so, dismiss it and DON'T scan ---
+                    if (QuizGameManager.Instance != null && QuizGameManager.Instance.TryDismissEndPanel())
+                    {
+                        // EndPanel was dismissed by this scan
+                        // Now show this item on tablet (first scan after ending)
+                        PlayScanSound();
+                        if (tablet != null)
+                        {
+                            tablet.UpdateDisplay(item);
+                        }
+                        return;
+                    }
+                    
+                    // Play scan sound
+                    PlayScanSound();
+                    
+                    // --- CHECK 2: Are we in Find Challenge? ---
                     if (QuizGameManager.Instance != null && QuizGameManager.Instance.IsGameActive)
                     {
-                        // Quiz modundaysak cevabı QuizManager'a gönder
-                        Debug.Log($"[Quiz] Cevap gönderiliyor: {item.objectID}");
+                        // Quiz mode - submit answer
+                        Debug.Log($"[Quiz] Submitting: {item.objectID}");
                         QuizGameManager.Instance.SubmitAnswer(item.objectID);
                     }
-                    // 2. Değilsek, eski öğrenme moduna (TabletDisplay) devam et
+                    // --- CHECK 3: Normal exploration mode ---
                     else if (tablet != null)
                     {
-                        Debug.Log($"[Learn] Kelime gösteriliyor: {item.objectID}");
+                        Debug.Log($"[Learn] Displaying: {item.objectID}");
                         tablet.UpdateDisplay(item);
                     }
 
-                    return; // İlk bulduğunda dur
+                    return; // Stop after first found
                 }
             }
+        }
+    }
+    
+    /// <summary>
+    /// Updates hover highlight on objects
+    /// </summary>
+    void UpdateHoverHighlight()
+    {
+        if (scannerInteractor == null) return;
+        
+        List<IXRHoverInteractable> hoverList = scannerInteractor.interactablesHovered;
+        WordItem newHoveredItem = null;
+        
+        // Find first WordItem being hovered
+        if (hoverList.Count > 0)
+        {
+            foreach (var target in hoverList)
+            {
+                WordItem item = target.transform.GetComponent<WordItem>();
+                if (item == null) item = target.transform.GetComponentInParent<WordItem>();
+                
+                if (item != null)
+                {
+                    newHoveredItem = item;
+                    break;
+                }
+            }
+        }
+        
+        // Handle hover change
+        if (newHoveredItem != currentHoveredItem)
+        {
+            // Clear old highlight
+            if (currentHoveredItem != null)
+            {
+                currentHoveredItem.OnHoverEnd();
+            }
+            
+            // Set new highlight
+            currentHoveredItem = newHoveredItem;
+            if (currentHoveredItem != null)
+            {
+                currentHoveredItem.OnHoverStart();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Clears any active hover highlight
+    /// </summary>
+    void ClearHoverHighlight()
+    {
+        if (currentHoveredItem != null)
+        {
+            currentHoveredItem.OnHoverEnd();
+            currentHoveredItem = null;
+        }
+    }
+    
+    /// <summary>
+    /// Plays the scan sound effect
+    /// </summary>
+    void PlayScanSound()
+    {
+        if (scanAudioSource != null && scanSound != null)
+        {
+            scanAudioSource.PlayOneShot(scanSound);
+        }
+    }
+    
+    /// <summary>
+    /// Public method for other scripts to play correct/wrong sounds
+    /// </summary>
+    public void PlayFeedbackSound(bool correct)
+    {
+        if (scanAudioSource == null) return;
+        
+        if (correct && correctSound != null)
+        {
+            scanAudioSource.PlayOneShot(correctSound);
+        }
+        else if (!correct && wrongSound != null)
+        {
+            scanAudioSource.PlayOneShot(wrongSound);
         }
     }
 }

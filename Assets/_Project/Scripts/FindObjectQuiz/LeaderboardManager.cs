@@ -30,8 +30,8 @@ public class LeaderboardManager : MonoBehaviour
         LeaderboardData data = LoadScores();
         data.scores.Add(new ScoreEntry { playerName = name, timeScore = time });
 
-        // Sýralama yap ve kaydet
-        data.scores = data.scores.OrderBy(x => x.timeScore).Take(5).ToList(); // Ýlk 10'u tutalým
+        // Sï¿½ralama yap ve kaydet
+        data.scores = data.scores.OrderBy(x => x.timeScore).Take(5).ToList(); // ï¿½lk 10'u tutalï¿½m
         SaveToDisk(data);
     }
 
@@ -40,14 +40,16 @@ public class LeaderboardManager : MonoBehaviour
         if (PlayerPrefs.HasKey(saveKey))
         {
             string json = PlayerPrefs.GetString(saveKey);
+            Debug.Log($"[LeaderboardManager] Loaded JSON: {json}");
             return JsonUtility.FromJson<LeaderboardData>(json);
         }
+        Debug.Log("[LeaderboardManager] No saved scores found");
         return new LeaderboardData();
     }
 
-    // --- YENÝ EKLENEN SÝLME FONKSÝYONLARI ---
+    // --- YENï¿½ EKLENEN Sï¿½LME FONKSï¿½YONLARI ---
 
-    // Belirli bir sýradaki skoru siler
+    // Belirli bir sï¿½radaki skoru siler
     public void DeleteScoreAtIndex(int index)
     {
         LeaderboardData data = LoadScores();
@@ -59,10 +61,13 @@ public class LeaderboardManager : MonoBehaviour
         }
     }
 
-    // Tüm skorlarý siler
+    // Tï¿½m skorlarï¿½ siler
     public void ClearAllScores()
     {
+        Debug.Log("[LeaderboardManager] Clearing all scores");
         PlayerPrefs.DeleteKey(saveKey);
+        PlayerPrefs.Save();
+        Debug.Log("[LeaderboardManager] Scores cleared");
     }
 
     // Ortak kaydetme fonksiyonu

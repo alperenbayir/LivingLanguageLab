@@ -399,6 +399,190 @@
       "english": "The Chocolate Bar",
       "audioFileName": "chocolate-bar",
       "sentence": ""
+    },
+    {
+      "id": "stool",
+      "article_only": "Der",
+      "german": "Der Hocker",
+      "english": "The Stool",
+      "audioFileName": "stool",
+      "sentence": ""
+    },
+    {
+      "id": "table-lamp",
+      "article_only": "Die",
+      "german": "Die Tischlampe",
+      "english": "The Table Lamp",
+      "audioFileName": "table-lamp",
+      "sentence": ""
+    },
+    {
+      "id": "plant",
+      "article_only": "Die",
+      "german": "Die Pflanze",
+      "english": "The Plant",
+      "audioFileName": "plant",
+      "sentence": ""
+    },
+    {
+      "id": "wall-clock",
+      "article_only": "Die",
+      "german": "Die Wanduhr",
+      "english": "The Wall Clock",
+      "audioFileName": "wall-clock",
+      "sentence": ""
+    },
+    {
+      "id": "vase",
+      "article_only": "Die",
+      "german": "Die Vase",
+      "english": "The Vase",
+      "audioFileName": "vase",
+      "sentence": ""
+    },
+    {
+      "id": "air-conditioner",
+      "article_only": "Die",
+      "german": "Die Klimaanlage",
+      "english": "The Air Conditioner",
+      "audioFileName": "air-conditioner",
+      "sentence": ""
+    },
+    {
+      "id": "book",
+      "article_only": "Das",
+      "german": "Das Buch",
+      "english": "The Book",
+      "audioFileName": "book",
+      "sentence": ""
+    },
+    {
+      "id": "gramophone",
+      "article_only": "Das",
+      "german": "Das Grammofon",
+      "english": "The Gramophone",
+      "audioFileName": "gramophone",
+      "sentence": ""
+    },
+    {
+      "id": "picture",
+      "article_only": "Das",
+      "german": "Das Bild",
+      "english": "The Picture",
+      "audioFileName": "picture",
+      "sentence": ""
+    },
+    {
+      "id": "side-table",
+      "article_only": "Der",
+      "german": "Der Beistelltisch",
+      "english": "The Side Table",
+      "audioFileName": "side-table",
+      "sentence": ""
+    },
+    {
+      "id": "rolling-pin",
+      "article_only": "Das",
+      "german": "Das Nudelholz",
+      "english": "The Rolling Pin",
+      "audioFileName": "rolling-pin",
+      "sentence": ""
+    },
+    {
+      "id": "teapot",
+      "article_only": "Die",
+      "german": "Die Teekanne",
+      "english": "The Teapot",
+      "audioFileName": "teapot",
+      "sentence": ""
+    },
+    {
+      "id": "broom",
+      "article_only": "Der",
+      "german": "Der Besen",
+      "english": "The Broom",
+      "audioFileName": "broom",
+      "sentence": ""
+    },
+    {
+      "id": "rug",
+      "article_only": "Der",
+      "german": "Der Teppich",
+      "english": "The Rug",
+      "audioFileName": "rug",
+      "sentence": ""
+    },
+    {
+      "id": "trash-can",
+      "article_only": "Der",
+      "german": "Der Mülleimer",
+      "english": "The Trash Can",
+      "audioFileName": "trash-can",
+      "sentence": ""
+    },
+    {
+      "id": "box",
+      "article_only": "Die",
+      "german": "Die Kiste",
+      "english": "The Box",
+      "audioFileName": "box",
+      "sentence": ""
+    },
+    {
+      "id": "beer",
+      "article_only": "Das",
+      "german": "Das Bier",
+      "english": "The Beer",
+      "audioFileName": "beer",
+      "sentence": ""
+    },
+    {
+      "id": "salt",
+      "article_only": "Das",
+      "german": "Das Salz",
+      "english": "The Salt",
+      "audioFileName": "salt",
+      "sentence": ""
+    },
+    {
+      "id": "extractor",
+      "article_only": "Die",
+      "german": "Die Dunstabzugshaube",
+      "english": "The Extractor Hood",
+      "audioFileName": "extractor",
+      "sentence": ""
+    },
+    {
+      "id": "potato",
+      "article_only": "Die",
+      "german": "Die Kartoffel",
+      "english": "The Potato",
+      "audioFileName": "potato",
+      "sentence": ""
+    },
+    {
+      "id": "jar",
+      "article_only": "Das",
+      "german": "Das Glas",
+      "english": "The Jar",
+      "audioFileName": "jar",
+      "sentence": ""
+    },
+    {
+      "id": "beaker",
+      "article_only": "Der",
+      "german": "Der Becher",
+      "english": "The Beaker",
+      "audioFileName": "beaker",
+      "sentence": ""
+    },
+    {
+      "id": "ladder",
+      "article_only": "Die",
+      "german": "Die Leiter",
+      "english": "The Ladder",
+      "audioFileName": "ladder",
+      "sentence": ""
     }
   ]
 }
