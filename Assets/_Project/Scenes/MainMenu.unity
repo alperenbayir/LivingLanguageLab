@@ -14019,6 +14019,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TabletDisplay
   idleLayout: {fileID: 0}
   scanLayout: {fileID: 1931561125}
+  idleMessageText: {fileID: 0}
   quizPromptPanel: {fileID: 0}
   startPercentage: 0.5
   stepPercentage: 0.05
@@ -14040,6 +14041,14 @@ MonoBehaviour:
   recordingDuration: 4.5
   locationName: student@kitchen
   isProcessing: 0
+  findChallengePromptPanel: {fileID: 0}
+  findChallengeDeclineButton: {fileID: 0}
+  cleaningChallengePromptPanel: {fileID: 0}
+  cleaningDeclineButton: {fileID: 0}
+  cleaningModePanel: {fileID: 0}
+  cleaningProgressText: {fileID: 0}
+  cleaningItemsText: {fileID: 0}
+  messageText: {fileID: 0}
 --- !u!4 &1174711409 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 303702848d345a940988d33f62c08785, type: 3}
@@ -21589,6 +21598,8 @@ MonoBehaviour:
       m_Flags: 0
     m_Reference: {fileID: 0}
   scannerInteractor: {fileID: 933679939}
+  scanAudioSource: {fileID: 0}
+  scanSound: {fileID: 0}
 --- !u!1 &1783572213
 GameObject:
   m_ObjectHideFlags: 0

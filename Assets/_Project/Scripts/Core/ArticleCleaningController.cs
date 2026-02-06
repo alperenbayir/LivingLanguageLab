@@ -1,27 +1,36 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// Viscera Cleanup Detail style cleaning game.
-/// Player grabs actual kitchen objects and throws them into correct article toilets.
+/// Article sorting challenge - final game phase.
+/// Player grabs kitchen objects and drops them into correct Der/Die/Das baskets.
+/// Correct = green light + object deleted. Wrong = red light (try again).
+/// Sorted items are tracked by ID in GameFlowController to exclude from future rounds.
 /// </summary>
 public class ArticleCleaningController : MonoBehaviour
 {
     public static ArticleCleaningController Instance;
 
-    [Header("Toilets")]
-    public QuizBasket derToilet;
-    public QuizBasket dieToilet;
-    public QuizBasket dasToilet;
+    [Header("Baskets")]
+    public QuizBasket derBasket;
+    public QuizBasket dieBasket;
+    public QuizBasket dasBasket;
 
-    [Header("Feedback")]
-    public float flushDelay = 0.5f;
-    public ParticleSystem flushParticlesPrefab;
+    [Header("Feedback Settings")]
+    public float lightDuration = 1.5f;
+    public AudioSource audioSource;
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
+
+    [Header("Wrong Answer")]
+    public Transform wrongAnswerSpawnPoint; // Objects teleport here on wrong answer
 
     // State
     private bool isCleaningMode = false;
     private List<WordItem> targetObjects = new List<WordItem>();
-    private Dictionary<string, QuizBasket> articleToToilet = new Dictionary<string, QuizBasket>();
+    private Dictionary<string, QuizBasket> articleToBasket = new Dictionary<string, QuizBasket>();
+    private HashSet<WordItem> processingItems = new HashSet<WordItem>(); // Prevent duplicate processing
 
     void Awake()
     {
@@ -30,34 +39,34 @@ public class ArticleCleaningController : MonoBehaviour
 
     void Start()
     {
-        // Map articles to toilets
-        if (derToilet != null) articleToToilet["DER"] = derToilet;
-        if (dieToilet != null) articleToToilet["DIE"] = dieToilet;
-        if (dasToilet != null) articleToToilet["DAS"] = dasToilet;
+        // Map articles to baskets
+        if (derBasket != null) articleToBasket["DER"] = derBasket;
+        if (dieBasket != null) articleToBasket["DIE"] = dieBasket;
+        if (dasBasket != null) articleToBasket["DAS"] = dasBasket;
 
-        // Auto-find toilets if not assigned
-        if (derToilet == null || dieToilet == null || dasToilet == null)
+        // Auto-find baskets if not assigned
+        if (derBasket == null || dieBasket == null || dasBasket == null)
         {
-            FindToilets();
+            FindBaskets();
         }
     }
 
-    void FindToilets()
+    void FindBaskets()
     {
-        QuizBasket[] allBaskets = FindObjectsOfType<QuizBasket>();
+        QuizBasket[] allBaskets = FindObjectsByType<QuizBasket>(FindObjectsSortMode.None);
         foreach (var basket in allBaskets)
         {
             string article = basket.acceptedArticle?.ToUpper();
-            if (article == "DER") derToilet = basket;
-            else if (article == "DIE") dieToilet = basket;
-            else if (article == "DAS") dasToilet = basket;
+            if (article == "DER") derBasket = basket;
+            else if (article == "DIE") dieBasket = basket;
+            else if (article == "DAS") dasBasket = basket;
         }
 
         // Rebuild dictionary
-        articleToToilet.Clear();
-        if (derToilet != null) articleToToilet["DER"] = derToilet;
-        if (dieToilet != null) articleToToilet["DIE"] = dieToilet;
-        if (dasToilet != null) articleToToilet["DAS"] = dasToilet;
+        articleToBasket.Clear();
+        if (derBasket != null) articleToBasket["DER"] = derBasket;
+        if (dieBasket != null) articleToBasket["DIE"] = dieBasket;
+        if (dasBasket != null) articleToBasket["DAS"] = dasBasket;
     }
 
     /// <summary>
@@ -68,98 +77,151 @@ public class ArticleCleaningController : MonoBehaviour
         isCleaningMode = true;
         targetObjects = new List<WordItem>(objectsToClean);
 
-        // Enable collision detection on toilets for these objects
-        EnableToilets(true);
+        // Enable baskets
+        EnableBaskets(true);
 
-        Debug.Log($"[ArticleCleaning] Started with {targetObjects.Count} objects to clean");
+        Debug.Log($"[ArticleCleaning] Started with {targetObjects.Count} objects to sort");
     }
 
     /// <summary>
-    /// Called when object enters any toilet basket
+    /// Called by QuizBasket when object enters
     /// </summary>
-    public void OnObjectInToilet(WordItem item, string toiletArticle)
+    public void OnObjectInBasket(WordItem item, string basketArticle)
     {
         if (!isCleaningMode) return;
         if (item == null) return;
 
+        // Prevent duplicate processing (OnTriggerStay fires every frame)
+        if (processingItems.Contains(item)) return;
+
+        // Check if object is being held - only process when dropped
+        var grabInteractable = item.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+        if (grabInteractable != null && grabInteractable.isSelected)
+        {
+            // Object is still being held, don't process yet
+            return;
+        }
+
         // Check if this is one of our target objects
         if (!targetObjects.Contains(item))
         {
-            Debug.Log($"[ArticleCleaning] Object {item.objectID} is not part of cleaning task");
             return;
         }
+
+        // Mark as processing
+        processingItems.Add(item);
 
         // Get correct article from vocabulary
         ItemData data = VocabularyManager.Instance?.GetItem(item.objectID);
         if (data == null) return;
 
         string correctArticle = data.article_only?.Trim().ToUpper();
-        string submittedArticle = toiletArticle?.Trim().ToUpper();
+        string submittedArticle = basketArticle?.Trim().ToUpper();
+
+        QuizBasket basket = GetBasketByArticle(submittedArticle);
 
         // Check answer
         if (correctArticle == submittedArticle)
         {
             Debug.Log($"[ArticleCleaning] CORRECT! {item.objectID} -> {submittedArticle}");
-            StartCoroutine(FlushObject(item, toiletArticle));
+            StartCoroutine(CorrectAnswer(item, basket));
         }
         else
         {
             Debug.Log($"[ArticleCleaning] WRONG! {item.objectID} is {correctArticle}, not {submittedArticle}");
-            // Wrong toilet - maybe bounce back or show red light
-            WrongToiletFeedback(item, toiletArticle);
+            StartCoroutine(WrongAnswer(basket, item));
         }
     }
 
-    System.Collections.IEnumerator FlushObject(WordItem item, string toiletArticle)
+    IEnumerator CorrectAnswer(WordItem item, QuizBasket basket)
     {
-        // Play particles at toilet position
-        QuizBasket toilet = GetToiletByArticle(toiletArticle);
-        if (toilet != null && flushParticlesPrefab != null)
+        // Show green light
+        if (basket != null && basket.myGreenLight != null)
         {
-            Vector3 particlePos = toilet.transform.position + Vector3.up * 0.5f;
-            Instantiate(flushParticlesPrefab, particlePos, Quaternion.identity);
+            basket.myGreenLight.SetActive(true);
         }
 
-        // Wait for flush sound
-        yield return new WaitForSeconds(flushDelay);
+        // Play correct sound
+        if (audioSource != null && correctSound != null)
+        {
+            audioSource.PlayOneShot(correctSound);
+        }
+
+        // Remove from target list
+        targetObjects.Remove(item);
+        processingItems.Remove(item);
+
+        // Delete the object
+        if (item != null)
+        {
+            Destroy(item.gameObject);
+        }
 
         // Notify GameFlowController
         GameFlowController.Instance?.OnObjectCleaned(item);
 
-        // Remove from our list
-        targetObjects.Remove(item);
-    }
+        // Wait then turn off light
+        yield return new WaitForSeconds(lightDuration);
 
-    void WrongToiletFeedback(WordItem item, string toiletArticle)
-    {
-        // Get the toilet's red light and blink it
-        QuizBasket toilet = GetToiletByArticle(toiletArticle);
-        if (toilet != null)
+        if (basket != null && basket.myGreenLight != null)
         {
-            // You could add a bounce-back mechanism here
-            // For now, just let it sit there for player to pick up again
-            Debug.Log($"[ArticleCleaning] Wrong toilet feedback for {toiletArticle}");
+            basket.myGreenLight.SetActive(false);
         }
     }
 
-    QuizBasket GetToiletByArticle(string article)
+    IEnumerator WrongAnswer(QuizBasket basket, WordItem item)
     {
-        articleToToilet.TryGetValue(article?.ToUpper(), out QuizBasket toilet);
-        return toilet;
+        // Show red light
+        if (basket != null && basket.myRedLight != null)
+        {
+            basket.myRedLight.SetActive(true);
+        }
+
+        // Play wrong sound
+        if (audioSource != null && wrongSound != null)
+        {
+            audioSource.PlayOneShot(wrongSound);
+        }
+
+        // Teleport object to retry spawn point
+        if (item != null && wrongAnswerSpawnPoint != null)
+        {
+            item.transform.position = wrongAnswerSpawnPoint.position;
+            Debug.Log($"[ArticleCleaning] {item.objectID} teleported to retry point");
+        }
+
+        // Allow retry
+        processingItems.Remove(item);
+
+        // Wait then turn off light
+        yield return new WaitForSeconds(lightDuration);
+
+        if (basket != null && basket.myRedLight != null)
+        {
+            basket.myRedLight.SetActive(false);
+        }
     }
 
-    void EnableToilets(bool enable)
+    QuizBasket GetBasketByArticle(string article)
     {
-        if (derToilet != null) derToilet.enabled = enable;
-        if (dieToilet != null) dieToilet.enabled = enable;
-        if (dasToilet != null) dasToilet.enabled = enable;
+        articleToBasket.TryGetValue(article?.ToUpper(), out QuizBasket basket);
+        return basket;
+    }
+
+    void EnableBaskets(bool enable)
+    {
+        // Parent (BasketSpawnArea) controls visibility
+        // This just enables/disables the QuizBasket trigger detection
+        if (derBasket != null) derBasket.enabled = enable;
+        if (dieBasket != null) dieBasket.enabled = enable;
+        if (dasBasket != null) dasBasket.enabled = enable;
     }
 
     public void StopCleaningMode()
     {
         isCleaningMode = false;
         targetObjects.Clear();
-        EnableToilets(false);
+        EnableBaskets(false);
     }
 
     public bool IsCleaningMode()

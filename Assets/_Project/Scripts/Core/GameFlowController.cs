@@ -4,34 +4,38 @@ using System.Linq;
 
 /// <summary>
 /// Orchestrates the 3-phase Kitchen experience:
-/// 1. Exploration (0-50%) - Free scanning
-/// 2. Find Challenge (50%) - Timer-based hunt, non-destructive
-/// 3. Cleaning Finale (90%) - Viscera-style article sorting with actual objects
+/// 1. Exploration (0-80%) - Free scanning
+/// 2. Find Challenge (~15% intervals) - Timer-based hunt, non-destructive
+/// 3. Article Sorting Finale (80%) - Sort objects into Der/Die/Das baskets
 /// </summary>
 public class GameFlowController : MonoBehaviour
 {
     public static GameFlowController Instance;
 
-    [Header("Phase Settings")]
-    [Range(0.3f, 0.6f)]
-    public float findChallengeThreshold = 0.1f; // 10%
-    [Range(0.7f, 0.95f)]
-    public float cleaningThreshold = 0.9f; // 90%
+    [Header("Phase Settings - Find Game")]
+    public float[] findChallengeMilestones = { 0.15f, 0.30f, 0.45f }; // 15%, 30%, 45% (forced at 45%)
+    public int requiredFindChallenges = 1; // Must complete at least 1 before Article Sorting
+
+    [Header("Phase Settings - Article Sorting")]
+    public float[] cleaningMilestones = { 0.70f, 1.0f }; // 70% optional, 100% forced
+
+    [Header("Highlight Settings")]
+    public Color highlightColor = new Color(0.3f, 1f, 0.3f, 1f); // Subtle green glow
+    [Range(0.05f, 0.3f)]
+    public float highlightIntensity = 0.1f; // Keep it subtle
 
     [Header("FindObject Challenge Settings")]
-    public int findChallengeObjectCount = 5;
+    public int findChallengeItemCount = 10; // Always 10 items per challenge
     public bool findChallengeTimed = true;
 
-    [Header("Cleaning Challenge Settings")]
-    public int cleaningObjectCount = 10;
-    public Transform toiletsParent; // Parent containing Der/Die/Das toilets
+    [Header("Article Sorting Challenge Settings")]
+    public int cleaningObjectCount = 20; // 20 words per round
     public Transform cleaningSpawnArea; // Area to gather objects initially
 
     [Header("Audio")]
     public AudioSource ambientAudioSource;
     public AudioClip ambientMusicClip;
     public AudioClip challengeMusicClip;
-    public AudioClip flushSoundClip;
     
     [Header("Lighting")]
     public Light mainLight;
@@ -39,6 +43,9 @@ public class GameFlowController : MonoBehaviour
     public float challengeLightIntensity = 0.3f;
     public Color normalLightColor = Color.white;
     public Color challengeLightColor = new Color(0.8f, 0.6f, 1f); // Slight purple tint
+    
+    [Header("Disco Lights")]
+    public Light[] challengeDiscoLights; // Assign multiple Spot Lights here for disco effect
 
     [Header("References")]
     public TabletDisplay tabletDisplay;
@@ -46,17 +53,21 @@ public class GameFlowController : MonoBehaviour
     public RightHandScanner rightHandScanner;
 
     // Internal state
-    private bool findChallengeCompleted = false;
-    private bool cleaningChallengeStarted = false;
+    private int findChallengesCompleted = 0;
+    private int currentFindMilestoneIndex = 0; // 0=15%, 1=30%, 2=45%
+    private int currentCleaningMilestoneIndex = 0; // 0=70%, 1=100%
+    private int cleaningChallengesCompleted = 0;
     private GamePhase currentPhase = GamePhase.Exploration;
     private List<WordItem> discoveredItems = new List<WordItem>();
     private List<WordItem> cleaningObjects = new List<WordItem>();
+    private List<string> cleaningItemNames = new List<string>();
+    private HashSet<string> sortedItemNames = new HashSet<string>(); // For strikethrough display
+    private HashSet<string> globallySortedItemIDs = new HashSet<string>(); // Persists across rounds
+    private HashSet<string> usedFindChallengeItemIDs = new HashSet<string>(); // No repeats across Find challenges
     private int cleanedCount = 0;
-    
-    // Progress tracking for Find Challenge offers
-    private float lastOfferedProgress = 0f;
-    private float offerInterval = 0.15f; // Offer every 15%
-    private bool isWaitingForResponse = false; // Prevent overlapping prompts
+
+    // Progress tracking
+    private bool isWaitingForResponse = false;
 
     public enum GamePhase
     {
@@ -70,6 +81,9 @@ public class GameFlowController : MonoBehaviour
     {
         Instance = this;
     }
+
+    [Header("Debug")]
+    public bool debugSkipToSorting = false; // Enable in Inspector to skip to sorting challenge
 
     void Start()
     {
@@ -88,6 +102,12 @@ public class GameFlowController : MonoBehaviour
 
         currentPhase = GamePhase.Exploration;
         
+        // Ensure all disco lights are OFF at game start
+        foreach (Light light in challengeDiscoLights)
+        {
+            if (light != null) light.gameObject.SetActive(false);
+        }
+        
         // Start ambient music
         if (ambientAudioSource != null && ambientMusicClip != null)
         {
@@ -96,6 +116,19 @@ public class GameFlowController : MonoBehaviour
             ambientAudioSource.loop = true;
             ambientAudioSource.Play();
         }
+
+        // Debug: Skip directly to sorting challenge for testing
+        if (debugSkipToSorting)
+        {
+            Invoke(nameof(DebugStartSorting), 2f); // Delay to let scene initialize
+        }
+    }
+
+    void DebugStartSorting()
+    {
+        Debug.Log("[GameFlow] DEBUG: Starting sorting challenge prompt");
+        findChallengesCompleted = requiredFindChallenges; // Skip find challenge requirement
+        OfferCleaningChallenge(); // Show prompt first
     }
 
     /// <summary>
@@ -104,7 +137,7 @@ public class GameFlowController : MonoBehaviour
     public void OnObjectDiscovered(string objectID)
     {
         // Don't interrupt if challenge is active or waiting for response
-        if (currentPhase == GamePhase.FindChallengeActive || 
+        if (currentPhase == GamePhase.FindChallengeActive ||
             currentPhase == GamePhase.CleaningChallengeActive ||
             isWaitingForResponse)
         {
@@ -112,24 +145,37 @@ public class GameFlowController : MonoBehaviour
         }
 
         float progress = GetDiscoveryProgress();
-        float currentMilestone = Mathf.Floor(progress / offerInterval) * offerInterval;
-        
-        // Check for Find Challenge trigger at each milestone (15%, 30%, 45%, 60%, 75%)
-        if (!findChallengeCompleted && progress < cleaningThreshold)
+        bool hasCompletedEnoughFindChallenges = findChallengesCompleted >= requiredFindChallenges;
+
+        // Check for Find Challenge triggers (15%, 30%, 45%)
+        if (currentFindMilestoneIndex < findChallengeMilestones.Length)
         {
-            // Only offer if we've reached a NEW milestone
-            if (currentMilestone > lastOfferedProgress)
+            float nextMilestone = findChallengeMilestones[currentFindMilestoneIndex];
+
+            if (progress >= nextMilestone)
             {
-                Debug.Log($"[GameFlow] Triggering Find Challenge at {currentMilestone:P0}");
-                lastOfferedProgress = currentMilestone;
-                OfferFindChallenge();
+                bool isLastMilestone = (currentFindMilestoneIndex == findChallengeMilestones.Length - 1);
+                bool mustForce = isLastMilestone && findChallengesCompleted < requiredFindChallenges;
+
+                Debug.Log($"[GameFlow] Find Challenge at {nextMilestone:P0} (force: {mustForce}, completed: {findChallengesCompleted}/{requiredFindChallenges})");
+                currentFindMilestoneIndex++;
+                OfferFindChallenge(forcePlay: mustForce);
             }
         }
-        // Check for Cleaning Challenge trigger (90%) - only once
-        else if (!cleaningChallengeStarted && progress >= cleaningThreshold && findChallengeCompleted)
+        // Check for Article Sorting Challenge (70%, 100%) - after completing required Find Challenges
+        else if (hasCompletedEnoughFindChallenges && currentCleaningMilestoneIndex < cleaningMilestones.Length)
         {
-            Debug.Log("[GameFlow] Triggering Cleaning Challenge at 90%");
-            OfferCleaningChallenge();
+            float nextMilestone = cleaningMilestones[currentCleaningMilestoneIndex];
+
+            if (progress >= nextMilestone)
+            {
+                bool isLastMilestone = (currentCleaningMilestoneIndex == cleaningMilestones.Length - 1);
+                bool mustForce = isLastMilestone && cleaningChallengesCompleted < 1; // Force at 100% if not done
+
+                Debug.Log($"[GameFlow] Article Sorting at {nextMilestone:P0} (force: {mustForce}, completed: {cleaningChallengesCompleted})");
+                currentCleaningMilestoneIndex++;
+                OfferCleaningChallenge(forcePlay: mustForce);
+            }
         }
     }
 
@@ -141,39 +187,31 @@ public class GameFlowController : MonoBehaviour
         return discovered / total;
     }
 
-    #region FIND OBJECT CHALLENGE (50%)
+    #region FIND OBJECT CHALLENGE
 
-    void OfferFindChallenge()
+    void OfferFindChallenge(bool forcePlay = false)
     {
-        Debug.Log($"[GameFlow] Offering Find Challenge at ~{lastOfferedProgress:P0}");
-        
-        // Set flag to prevent multiple prompts
+        Debug.Log($"[GameFlow] Offering Find Challenge (force: {forcePlay}, completed: {findChallengesCompleted}/{requiredFindChallenges})");
+
         isWaitingForResponse = true;
-        
-        // Disable scanning during prompt
         RightHandScanner.CanScan = false;
-        
-        // Dim lights and start music
         StartChallengeAtmosphere();
 
-        // Show offer on tablet
+        // Show offer on tablet (hide decline button if forced)
         tabletDisplay.ShowFindChallengePrompt(
             onAccept: () => {
                 isWaitingForResponse = false;
-                // Scanning stays disabled, challenge starts
                 StartFindChallenge();
             },
             onDecline: () => {
                 Debug.Log("[GameFlow] Find Challenge declined");
                 isWaitingForResponse = false;
                 EndChallengeAtmosphere();
-                // Re-enable scanning
                 RightHandScanner.CanScan = true;
-                // Return to exploration mode
                 if (tabletDisplay != null)
                     tabletDisplay.ReturnToExplorationMode();
-                // Will re-offer at next 15% milestone (not immediately)
-            }
+            },
+            forcePlay: forcePlay
         );
     }
 
@@ -182,37 +220,51 @@ public class GameFlowController : MonoBehaviour
         Debug.Log("[GameFlow] Starting Find Challenge");
         currentPhase = GamePhase.FindChallengeActive;
         
+        // Enable all disco lights when challenge actually starts (Yes pressed)
+        foreach (Light light in challengeDiscoLights)
+        {
+            if (light != null) light.gameObject.SetActive(true);
+        }
+        
         // Re-enable scanning so player can find objects
         RightHandScanner.CanScan = true;
 
-        // Get discovered items
+        // Get discovered items, excluding already used ones (no repeats across challenges)
         List<string> discoveredIDs = GetDiscoveredItemIDs();
-        
-        // Prepare challenge with 5 random discovered items
-        List<string> challengeItems = GetRandomItems(discoveredIDs, findChallengeObjectCount);
-        
+        List<string> availableIDs = discoveredIDs
+            .Where(id => !usedFindChallengeItemIDs.Contains(id))
+            .ToList();
+
+        List<string> challengeItems = GetRandomItems(availableIDs, findChallengeItemCount);
+
+        // Track used items so they won't appear in future challenges
+        foreach (string id in challengeItems)
+        {
+            usedFindChallengeItemIDs.Add(id);
+        }
+
         // Start the quiz with external trigger
         quizGameManager.StartExternalChallenge(challengeItems, findChallengeTimed);
     }
 
     public void OnFindChallengeComplete(float finalTime)
     {
-        Debug.Log($"[GameFlow] Find Challenge complete! Time: {finalTime:F1}s");
-        findChallengeCompleted = true;
+        findChallengesCompleted++;
+        Debug.Log($"[GameFlow] Find Challenge complete! Time: {finalTime:F1}s (Total completed: {findChallengesCompleted}/{requiredFindChallenges})");
+
         isWaitingForResponse = false;
         currentPhase = GamePhase.Exploration;
 
-        // Restore atmosphere
         EndChallengeAtmosphere();
-        
-        // Re-enable scanning for exploration mode
         RightHandScanner.CanScan = true;
 
-        // Return to exploration mode on tablet
         if (tabletDisplay != null)
         {
             tabletDisplay.ReturnToExplorationMode();
-            tabletDisplay.ShowMessage($"Challenge complete! Time: {finalTime:F1}s\nContinue exploring...");
+            string message = findChallengesCompleted >= requiredFindChallenges
+                ? $"Great! Time: {finalTime:F1}s\nArticle Sorting unlocked!"
+                : $"Good! Time: {finalTime:F1}s\nKeep exploring...";
+            tabletDisplay.ShowMessage(message);
         }
     }
 
@@ -232,51 +284,71 @@ public class GameFlowController : MonoBehaviour
 
     #endregion
 
-    #region CLEANING CHALLENGE (90%)
+    #region ARTICLE SORTING CHALLENGE (50%)
 
-    void OfferCleaningChallenge()
+    void OfferCleaningChallenge(bool forcePlay = false)
     {
-        Debug.Log("[GameFlow] Offering Cleaning Challenge at 90%");
-        
-        // Set flag to prevent other prompts
+        Debug.Log($"[GameFlow] Offering Article Sorting Challenge (forcePlay: {forcePlay})");
+
+        // Lock state to prevent overlapping UI
         isWaitingForResponse = true;
-        
+        RightHandScanner.CanScan = false;
+
         // Dramatic atmosphere
         StartChallengeAtmosphere();
 
-        // Auto-start or show big prompt
+        // Show prompt (hide decline button if forced)
         tabletDisplay.ShowCleaningChallengePrompt(
             onAccept: () => {
                 isWaitingForResponse = false;
+                // Scanning stays disabled during sorting challenge
                 StartCleaningChallenge();
             },
             onDecline: () => {
-                Debug.Log("[GameFlow] Cleaning Challenge delayed");
+                Debug.Log("[GameFlow] Article Sorting Challenge declined - will ask again later");
                 isWaitingForResponse = false;
+                RightHandScanner.CanScan = true; // Re-enable scanning
                 EndChallengeAtmosphere();
                 if (tabletDisplay != null)
                     tabletDisplay.ReturnToExplorationMode();
-            }
+            },
+            forcePlay: forcePlay
         );
     }
 
     void StartCleaningChallenge()
     {
-        Debug.Log("[GameFlow] Starting Cleaning Challenge");
+        Debug.Log("[GameFlow] Starting Article Sorting Challenge");
         currentPhase = GamePhase.CleaningChallengeActive;
-        cleaningChallengeStarted = true;
         cleanedCount = 0;
+
+        // Enable basket area (parent must be active for children to show)
+        if (cleaningSpawnArea != null)
+        {
+            cleaningSpawnArea.gameObject.SetActive(true);
+            Debug.Log("[GameFlow] Enabled BasketSpawnArea");
+        }
 
         // Collect actual kitchen objects for cleaning
         cleaningObjects = GetKitchenObjectsForCleaning(cleaningObjectCount);
-        
-        // Gather them to cleaning area
+
+        // Gather them to cleaning area and highlight them
         GatherObjectsForCleaning();
+        HighlightCleaningObjects(true);
 
-        // Setup tablet for cleaning UI
-        tabletDisplay.EnterCleaningMode(cleaningObjects.Count);
+        // Setup tablet for cleaning UI with item names (without articles, comma-separated)
+        cleaningItemNames = cleaningObjects
+            .Select(w => {
+                var item = VocabularyManager.Instance?.GetItem(w.objectID);
+                if (item != null && item.german.Contains(" "))
+                    return item.german.Substring(item.german.IndexOf(' ') + 1); // Remove article
+                return item?.german ?? w.objectID;
+            })
+            .ToList();
+        sortedItemNames.Clear();
+        tabletDisplay.EnterCleaningMode(cleaningObjects.Count, cleaningItemNames);
 
-        // Enable cleaning interaction
+        // Enable cleaning interaction (this enables individual baskets)
         ArticleCleaningController.Instance?.StartCleaningMode(cleaningObjects);
 
         UpdateCleaningUI();
@@ -284,50 +356,41 @@ public class GameFlowController : MonoBehaviour
 
     List<WordItem> GetKitchenObjectsForCleaning(int count)
     {
+
         // Get all WordItems in scene
-        WordItem[] allItems = FindObjectsOfType<WordItem>();
-        
-        // Filter to discovered ones first, then add undiscovered if needed
-        List<WordItem> discovered = allItems.Where(w => 
-            SentenceHistoryManager.IsDiscovered(w.objectID)).ToList();
-        
-        List<WordItem> selected = new List<WordItem>();
-        
-        // Add discovered items first
-        selected.AddRange(discovered.OrderBy(x => Random.value).Take(Mathf.Min(count, discovered.Count)));
-        
-        // Fill with undiscovered if needed
-        if (selected.Count < count)
-        {
-            var undiscovered = allItems.Where(w => !SentenceHistoryManager.IsDiscovered(w.objectID))
-                .OrderBy(x => Random.value).Take(count - selected.Count);
-            selected.AddRange(undiscovered);
-        }
-        
-        return selected.Take(count).ToList();
+        WordItem[] allItems = FindObjectsByType<WordItem>(FindObjectsSortMode.None);
+
+        // Filter: canSort=true, not already sorted globally, unique by objectID
+        var sortable = allItems
+            .Where(w => VocabularyManager.Instance.CanSort(w.objectID))
+            .Where(w => !globallySortedItemIDs.Contains(w.objectID)) // Exclude items sorted in previous rounds
+            .GroupBy(w => w.objectID)
+            .Select(g => g.First())
+            .ToList();
+
+        // Separate discovered and undiscovered
+        var discovered = sortable.Where(w => SentenceHistoryManager.IsDiscovered(w.objectID)).ToList();
+        var undiscovered = sortable.Where(w => !SentenceHistoryManager.IsDiscovered(w.objectID)).ToList();
+
+        // Prioritize discovered items, then fill with undiscovered
+        var selected = discovered.OrderBy(x => Random.value)
+            .Concat(undiscovered.OrderBy(x => Random.value))
+            .Take(count)
+            .ToList();
+
+        Debug.Log($"[GameFlow] Selected {selected.Count} unique sortable objects for cleaning challenge");
+
+        return selected;
     }
 
     void GatherObjectsForCleaning()
     {
-        // Move objects to cleaning spawn area
-        if (cleaningSpawnArea != null)
+        // Enable grabbing on all cleaning objects (they stay in their original scene positions)
+        foreach (var item in cleaningObjects)
         {
-            Vector3 center = cleaningSpawnArea.position;
-            for (int i = 0; i < cleaningObjects.Count; i++)
+            if (item != null)
             {
-                if (cleaningObjects[i] != null)
-                {
-                    // Random position around center
-                    Vector3 offset = new Vector3(
-                        Random.Range(-0.5f, 0.5f),
-                        0.1f,
-                        Random.Range(-0.5f, 0.5f)
-                    );
-                    cleaningObjects[i].transform.position = center + offset;
-                    
-                    // Make sure they're grabbable
-                    EnableGrabbing(cleaningObjects[i], true);
-                }
+                EnableGrabbing(item, true);
             }
         }
     }
@@ -335,20 +398,23 @@ public class GameFlowController : MonoBehaviour
     public void OnObjectCleaned(WordItem item)
     {
         cleanedCount++;
-        UpdateCleaningUI();
 
-        // Play flush sound
-        if (flushSoundClip != null && ambientAudioSource != null)
-        {
-            ambientAudioSource.PlayOneShot(flushSoundClip);
-        }
-
-        // Disable the object (it's "flushed")
+        // Mark item as sorted for strikethrough on tablet + track globally
         if (item != null)
         {
-            EnableGrabbing(item, false);
-            item.gameObject.SetActive(false); // Or destroy: Destroy(item.gameObject);
+            globallySortedItemIDs.Add(item.objectID); // Persists across rounds
+
+            var vocabItem = VocabularyManager.Instance?.GetItem(item.objectID);
+            if (vocabItem != null)
+            {
+                string itemName = vocabItem.german.Contains(" ")
+                    ? vocabItem.german.Substring(vocabItem.german.IndexOf(' ') + 1)
+                    : vocabItem.german;
+                sortedItemNames.Add(itemName);
+            }
         }
+
+        UpdateCleaningUI();
 
         // Check completion
         if (cleanedCount >= cleaningObjects.Count)
@@ -360,18 +426,33 @@ public class GameFlowController : MonoBehaviour
     void UpdateCleaningUI()
     {
         tabletDisplay.UpdateCleaningProgress(cleanedCount, cleaningObjects.Count);
+        tabletDisplay.UpdateCleaningItemsList(cleaningItemNames, sortedItemNames);
     }
 
     void OnCleaningComplete()
     {
-        Debug.Log("[GameFlow] Cleaning Challenge complete!");
-        currentPhase = GamePhase.Complete;
+        cleaningChallengesCompleted++;
+        Debug.Log($"[GameFlow] Article Sorting complete! (Total: {cleaningChallengesCompleted}, Globally sorted: {globallySortedItemIDs.Count})");
 
-        // Show completion
-        tabletDisplay.ShowCleaningComplete();
+        EndChallengeAtmosphere();
+        RightHandScanner.CanScan = true;
 
-        // Return to MainMenu after delay
-        Invoke(nameof(ReturnToMainMenu), 5f);
+        // Check if game is fully complete (at 100% or no more milestones)
+        bool isGameComplete = currentCleaningMilestoneIndex >= cleaningMilestones.Length;
+
+        if (isGameComplete)
+        {
+            currentPhase = GamePhase.Complete;
+            tabletDisplay.ShowCleaningComplete();
+            Invoke(nameof(ReturnToMainMenu), 5f);
+        }
+        else
+        {
+            // Return to exploration for more progress
+            currentPhase = GamePhase.Exploration;
+            tabletDisplay.ReturnToExplorationMode();
+            tabletDisplay.ShowMessage($"Great job! {globallySortedItemIDs.Count} items sorted.\nKeep exploring!");
+        }
     }
 
     void ReturnToMainMenu()
@@ -387,12 +468,14 @@ public class GameFlowController : MonoBehaviour
     {
         Debug.Log("[GameFlow] Dimming lights, starting challenge music");
         
-        // Dim the lights
+        // Dim the main light
         if (mainLight != null)
         {
             mainLight.intensity = challengeLightIntensity;
             mainLight.color = challengeLightColor;
         }
+        
+        // Note: Disco light is enabled in StartFindChallenge() when player presses Yes
         
         // Switch to challenge music
         if (ambientAudioSource != null)
@@ -418,6 +501,12 @@ public class GameFlowController : MonoBehaviour
             mainLight.color = normalLightColor;
         }
         
+        // Disable all disco lights
+        foreach (Light light in challengeDiscoLights)
+        {
+            if (light != null) light.gameObject.SetActive(false);
+        }
+        
         // Return to ambient music
         if (ambientAudioSource != null)
         {
@@ -440,7 +529,7 @@ public class GameFlowController : MonoBehaviour
     {
         // Get all discovered IDs from SentenceHistoryManager
         // Since discoveredIDs is private, we use WordItems in scene
-        WordItem[] items = FindObjectsOfType<WordItem>();
+        WordItem[] items = FindObjectsByType<WordItem>(FindObjectsSortMode.None);
         return items.Where(w => SentenceHistoryManager.IsDiscovered(w.objectID))
             .Select(w => w.objectID).Distinct().ToList();
     }
@@ -452,10 +541,36 @@ public class GameFlowController : MonoBehaviour
 
     void EnableGrabbing(WordItem item, bool enabled)
     {
-        var interactable = item.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRBaseInteractable>();
-        if (interactable != null)
+        // FIRST: Disable XR Simple Interactable (must happen before enabling grab)
+        var simpleInteractable = item.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
+        if (simpleInteractable != null)
         {
-            interactable.enabled = enabled;
+            simpleInteractable.enabled = !enabled;
+            Debug.Log($"[GameFlow] {item.objectID} XRSimpleInteractable enabled = {!enabled}");
+        }
+
+        // THEN: Enable XR Grab Interactable
+        var grabInteractable = item.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
+        if (grabInteractable != null)
+        {
+            grabInteractable.enabled = enabled;
+            Debug.Log($"[GameFlow] {item.objectID} XRGrabInteractable enabled = {enabled}");
+        }
+        else
+        {
+            Debug.LogWarning($"[GameFlow] {item.objectID} has no XRGrabInteractable!");
+        }
+
+        // Enable physics for grabbing
+        var rb = item.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = !enabled;
+            Debug.Log($"[GameFlow] {item.objectID} Rigidbody isKinematic = {!enabled}");
+        }
+        else
+        {
+            Debug.LogWarning($"[GameFlow] {item.objectID} has no Rigidbody!");
         }
     }
 
@@ -467,6 +582,44 @@ public class GameFlowController : MonoBehaviour
     public bool IsCleaningMode()
     {
         return currentPhase == GamePhase.CleaningChallengeActive;
+    }
+
+    void HighlightCleaningObjects(bool highlight)
+    {
+        foreach (var item in cleaningObjects)
+        {
+            if (item == null) continue;
+            SetObjectHighlight(item, highlight);
+        }
+    }
+
+    void SetObjectHighlight(WordItem item, bool highlight)
+    {
+        if (item == null) return;
+
+        var renderers = item.GetComponentsInChildren<Renderer>();
+        foreach (var renderer in renderers)
+        {
+            foreach (var mat in renderer.materials)
+            {
+                if (highlight)
+                {
+                    // Subtle emission only - don't change base color to preserve texture
+                    mat.EnableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", highlightColor * highlightIntensity);
+                }
+                else
+                {
+                    mat.DisableKeyword("_EMISSION");
+                    mat.SetColor("_EmissionColor", Color.black);
+                }
+            }
+        }
+    }
+
+    public void RemoveHighlight(WordItem item)
+    {
+        SetObjectHighlight(item, false);
     }
 
     #endregion

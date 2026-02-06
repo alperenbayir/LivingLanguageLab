@@ -21,12 +21,6 @@ public class RightHandScanner : MonoBehaviour
     // This allows you to drag your Near-Far object directly into this slot.
     public XRBaseInteractor scannerInteractor;
     
-    [Header("Audio")]
-    public AudioSource scanAudioSource;
-    public AudioClip scanSound;
-    public AudioClip correctSound;
-    public AudioClip wrongSound;
-    
     // Static flag to disable scanning during challenges
     public static bool CanScan = true;
     
@@ -90,16 +84,12 @@ public class RightHandScanner : MonoBehaviour
                     {
                         // EndPanel was dismissed by this scan
                         // Now show this item on tablet (first scan after ending)
-                        PlayScanSound();
                         if (tablet != null)
                         {
                             tablet.UpdateDisplay(item);
                         }
                         return;
                     }
-                    
-                    // Play scan sound
-                    PlayScanSound();
                     
                     // --- CHECK 2: Are we in Find Challenge? ---
                     if (QuizGameManager.Instance != null && QuizGameManager.Instance.IsGameActive)
@@ -177,31 +167,4 @@ public class RightHandScanner : MonoBehaviour
         }
     }
     
-    /// <summary>
-    /// Plays the scan sound effect
-    /// </summary>
-    void PlayScanSound()
-    {
-        if (scanAudioSource != null && scanSound != null)
-        {
-            scanAudioSource.PlayOneShot(scanSound);
-        }
-    }
-    
-    /// <summary>
-    /// Public method for other scripts to play correct/wrong sounds
-    /// </summary>
-    public void PlayFeedbackSound(bool correct)
-    {
-        if (scanAudioSource == null) return;
-        
-        if (correct && correctSound != null)
-        {
-            scanAudioSource.PlayOneShot(correctSound);
-        }
-        else if (!correct && wrongSound != null)
-        {
-            scanAudioSource.PlayOneShot(wrongSound);
-        }
-    }
 }

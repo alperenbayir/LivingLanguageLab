@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
-using TMPro; 
+using TMPro;
 using UnityEngine.UI;
 using Meta.WitAi;
 using Meta.WitAi.Requests;
 using Meta.WitAi.Events;
 using Oculus.Voice;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.SceneManagement;
 
 public class TabletDisplay : MonoBehaviour
@@ -16,41 +18,16 @@ public class TabletDisplay : MonoBehaviour
     [Header("Layout Containers")]
     public GameObject idleLayout;
     public GameObject scanLayout;
-    // public GameObject lightGameLayout; // not yet implemented
-
-    [Header("Quiz Prompt System")]
-    public GameObject quizPromptPanel;
-
-    [Range(0.1f, 1.0f)]
-    public float startPercentage = 0.5f;   // İlk hedef (%50)
-
-    [Range(0.01f, 0.2f)]
-    public float stepPercentage = 0.05f;   // Artış adımı (%5)
-
-    private float nextTargetRatio;         // Sıradaki hedefi hafızada tutacak
+    public TextMeshProUGUI idleMessageText; // Dynamic idle message
 
     // ============================================================================
-    // UI ELEMENTS - SCAN MODE
+    // UI ELEMENTS
     // ============================================================================
-    [Header("Scan Mode UI")]
-    public TextMeshProUGUI germanLabel;
-    public TextMeshProUGUI sentenceText; // Shows AI sentence in scan mode, transcription in pronunciation mode
-    public TextMeshProUGUI progressText;
-    
-    [Header("Scan Mode Buttons")]
-    public Button listenButton;
-    public Button practicePronunciationButton;
-
-    // ============================================================================
-    // UI ELEMENTS - PRONUNCIATION MODE
-    // ============================================================================
-    [Header("Pronunciation Mode UI")]
-    public TextMeshProUGUI pronunciationStatusText;
-    public TextMeshProUGUI pronunciationPercentageText;
-    
-    [Header("Pronunciation Mode Buttons")]
-    public Button speakButton;
-    public Button listenButtonPronunciation; // Optional: separate button for pronunciation mode
+    [Header("UI Elements")]
+    public TextMeshProUGUI germanLabel;     // Shows German word with colored article
+    public TextMeshProUGUI sentenceText;    // Shows AI sentence / pronunciation feedback
+    public TextMeshProUGUI progressText;    // Shows "X/76 discovered"
+    public GameObject backgroundGrid;
 
     // ============================================================================
     // AUDIO
@@ -61,32 +38,34 @@ public class TabletDisplay : MonoBehaviour
     private AudioClip currentAudioClip;
 
     // ============================================================================
-    // GLOBAL UI ELEMENTS
-    // ============================================================================
-    [Header("Global UI")]
-    public TextMeshProUGUI locationLabel;
-    public GameObject backgroundGrid;
-
-    // ============================================================================
-    // MANAGER REFERENCES
+    // MANAGERS (Auto-found if not assigned)
     // ============================================================================
     [Header("Managers")]
-    public VocabularyManager vocabManager;
     public SentenceGenerator sentenceGenerator;
-    
-    // ============================================================================
-    // WIT.AI INTEGRATION
-    // ============================================================================
-    [Header("Wit.ai")]
-    [Range(4f, 5f)]
-    public float recordingDuration = 4.5f; // Recording duration in seconds
-    private AppVoiceExperience voiceExperience; // Found at runtime from VoiceManager GameObject
 
     // ============================================================================
-    // SETTINGS
+    // WIT.AI SETTINGS
     // ============================================================================
-    [Header("Settings")]
-    public string locationName = "KITCHEN";
+    [Header("Wit.ai Settings")]
+    [Range(4f, 5f)]
+    public float recordingDuration = 4.5f;
+    private AppVoiceExperience voiceExperience; // Found at runtime
+
+
+    // ============================================================================
+    // HIDDEN LEGACY FIELDS (kept for compatibility, not shown in Inspector)
+    // ============================================================================
+    [HideInInspector] public float startPercentage = 0.5f;
+    [HideInInspector] public float stepPercentage = 0.05f;
+    [HideInInspector] public GameObject quizPromptPanel;
+    [HideInInspector] public Button listenButton;
+    [HideInInspector] public Button speakButton;
+    [HideInInspector] public Button practicePronunciationButton;
+    [HideInInspector] public Button listenButtonPronunciation;
+    [HideInInspector] public TextMeshProUGUI pronunciationStatusText;
+    [HideInInspector] public TextMeshProUGUI pronunciationPercentageText;
+    [HideInInspector] public VocabularyManager vocabManager;
+    private float nextTargetRatio;
 
     // Internal State
     [HideInInspector]
@@ -95,6 +74,9 @@ public class TabletDisplay : MonoBehaviour
     // Pronunciation state
     private WordItem currentPronunciationItem; // Store the current item for pronunciation mode
     private WordItem currentScanItem; // Store the currently scanned item
+
+    // Idle message state
+    private bool hasDeclinedChallenge = false; // Track if player returned from a challenge prompt
     
     // Wit.ai recording state
     private bool isRecording = false;
@@ -110,7 +92,6 @@ public class TabletDisplay : MonoBehaviour
 
 
         //Initialize Globals
-        if (locationLabel) locationLabel.text = locationName;
         if (backgroundGrid) backgroundGrid.SetActive(true); // Always on
 
         // Initialize the counter on startup
@@ -175,7 +156,7 @@ public class TabletDisplay : MonoBehaviour
             voiceExperience.VoiceEvents.OnFullTranscription.AddListener((text) => OnWitTranscription(text));
             voiceExperience.VoiceEvents.OnPartialTranscription.AddListener((text) => OnWitPartialTranscription(text));
             voiceExperience.VoiceEvents.OnError.AddListener(OnWitError);
-            voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompleted);
+            voiceExperience.VoiceEvents.OnRequestCompleted.AddListener(OnWitRequestCompletedHandler);
         }
         else
         {
@@ -183,9 +164,15 @@ public class TabletDisplay : MonoBehaviour
         }
     }
 
-    private void OnWitRequestCompleted()
+    /// <summary>
+    /// Parameterless handler for OnRequestCompleted event
+    /// </summary>
+    private void OnWitRequestCompletedHandler()
     {
-        throw new NotImplementedException();
+        if (isRecording)
+        {
+            isRecording = false;
+        }
     }
 
     void OnDestroy()
@@ -193,10 +180,10 @@ public class TabletDisplay : MonoBehaviour
         // Clean up event listeners
         if (voiceExperience != null)
         {
-            voiceExperience.VoiceEvents.OnFullTranscription.RemoveListener(OnWitTranscription);
-            voiceExperience.VoiceEvents.OnPartialTranscription.RemoveListener(OnWitPartialTranscription);
-            voiceExperience.VoiceEvents.OnError.RemoveListener(OnWitError);
-            voiceExperience.VoiceEvents.OnRequestCompleted.RemoveListener(OnWitRequestCompleted);
+            voiceExperience.VoiceEvents.OnFullTranscription.RemoveAllListeners();
+            voiceExperience.VoiceEvents.OnPartialTranscription.RemoveAllListeners();
+            voiceExperience.VoiceEvents.OnError.RemoveAllListeners();
+            voiceExperience.VoiceEvents.OnRequestCompleted.RemoveAllListeners();
         }
     }
 
@@ -213,6 +200,7 @@ public class TabletDisplay : MonoBehaviour
         {
             case TabletMode.Idle:
                 if (idleLayout) idleLayout.SetActive(true);
+                UpdateIdleMessage();
                 break;
 
             case TabletMode.Scanning:
@@ -228,7 +216,63 @@ public class TabletDisplay : MonoBehaviour
                 break;
         }
     }
-    
+
+    /// <summary>
+    /// Updates the idle layout message based on game state
+    /// </summary>
+    private void UpdateIdleMessage()
+    {
+        if (idleMessageText == null) return;
+
+        if (hasDeclinedChallenge)
+        {
+            idleMessageText.text = "Keep exploring! Scan objects to unlock more challenges.";
+        }
+        else
+        {
+            idleMessageText.text = "Start learning by scanning an object";
+        }
+    }
+
+    /// <summary>
+    /// Returns the German word with the article colored to match basket colors
+    /// Der = #278F6D (green), Die = #562128 (burgundy), Das = #284190 (blue)
+    /// </summary>
+    private string GetColoredGermanWord(string objectID, string germanWord)
+    {
+        if (VocabularyManager.Instance == null) return germanWord;
+
+        ItemData data = VocabularyManager.Instance.GetItem(objectID);
+        if (data == null || string.IsNullOrEmpty(data.article_only)) return germanWord;
+
+        string article = data.article_only.Trim();
+        string colorCode;
+
+        switch (article.ToUpper())
+        {
+            case "DER":
+                colorCode = "#278F6D";
+                break;
+            case "DIE":
+                colorCode = "#562128";
+                break;
+            case "DAS":
+                colorCode = "#284190";
+                break;
+            default:
+                return germanWord;
+        }
+
+        // Replace the article at the start with colored version
+        if (germanWord.StartsWith(article, System.StringComparison.OrdinalIgnoreCase))
+        {
+            string restOfWord = germanWord.Substring(article.Length);
+            return $"<color={colorCode}>{article}</color>{restOfWord}";
+        }
+
+        return germanWord;
+    }
+
     /// <summary>
     /// Shows elements for scan mode
     /// </summary>
@@ -238,7 +282,7 @@ public class TabletDisplay : MonoBehaviour
         if (sentenceText != null)
         {
             sentenceText.gameObject.SetActive(true);
-            // Reset sentence text to show generated sentence (not pronunciation transcription)
+            sentenceText.color = Color.white; // Reset color from pronunciation feedback
         }
         if (practicePronunciationButton != null)
         {
@@ -321,7 +365,7 @@ public class TabletDisplay : MonoBehaviour
             CheckProgressForQuiz();
         }
 
-        if (germanLabel != null) germanLabel.text = item.germanWord;
+        if (germanLabel != null) germanLabel.text = GetColoredGermanWord(item.objectID, item.germanWord);
 
         UpdateProgressUI();
         if (sentenceText) sentenceText.text = "Generating sentence...";
@@ -570,44 +614,28 @@ public class TabletDisplay : MonoBehaviour
             return;
         }
 
-        // Get the expected text (German word without article)
+        // Disable scanning during pronunciation
+        RightHandScanner.CanScan = false;
+
+        // Get the expected text (full German word WITH article, e.g., "Die Kaffeetasse")
         if (currentScanItem != null)
         {
             expectedText = currentScanItem.germanWord;
-            // Remove article if present (e.g., "Die Kaffeetasse" -> "Kaffeetasse")
-            if (expectedText.Contains(" "))
-            {
-                string[] parts = expectedText.Split(' ');
-                if (parts.Length > 1)
-                {
-                    expectedText = string.Join(" ", parts, 1, parts.Length - 1);
-                }
-            }
         }
         else if (germanLabel != null)
         {
-            expectedText = germanLabel.text;
+            // Strip color tags if present (from colored article display)
+            expectedText = System.Text.RegularExpressions.Regex.Replace(germanLabel.text, "<.*?>", "");
         }
 
-        // Disable both buttons during recording
+        // Disable speak button during recording
         SetButtonInteractable(speakButton, false);
-        SetButtonInteractable(GetPronunciationListenButton(), false);
 
-        // Hide previous result when starting a new recording
-        if (pronunciationPercentageText != null)
-        {
-            pronunciationPercentageText.gameObject.SetActive(false);
-        }
-
-        // Clear sentenceText to show transcription
+        // Show "Listening..." in sentence text
         if (sentenceText != null)
         {
-            sentenceText.text = "";
-        }
-
-        if (pronunciationStatusText != null)
-        {
-            pronunciationStatusText.text = "Speaking...";
+            sentenceText.color = Color.white;
+            sentenceText.text = "Listening...";
         }
 
         // Start Wit.ai recording
@@ -663,23 +691,21 @@ public class TabletDisplay : MonoBehaviour
         {
             voiceExperience.Deactivate();
             isRecording = false;
-            
-            if (pronunciationStatusText != null)
+
+            if (sentenceText != null)
             {
-                pronunciationStatusText.text = "Processing...";
+                sentenceText.text = "Processing...";
             }
         }
     }
     
     /// <summary>
     /// Called when Wit.ai provides partial transcription (while speaking)
+    /// Keep showing "Listening..." - don't show partial text
     /// </summary>
     private void OnWitPartialTranscription(string transcription)
     {
-        if (isRecording && sentenceText != null)
-        {
-            sentenceText.text = transcription;
-        }
+        // Keep "Listening..." displayed, don't show partial transcription
     }
     
     /// <summary>
@@ -688,16 +714,14 @@ public class TabletDisplay : MonoBehaviour
     private void OnWitTranscription(string transcription)
     {
         if (!isRecording) return;
-        
-        Debug.Log($"Wit.ai Transcription: {transcription}");
-        
-        // Update the sentenceText with transcription
-        UpdatePronunciationTranscription(transcription);
-        
-        // Calculate pronunciation score
+
+        Debug.Log($"Wit.ai Transcription: {transcription} (Expected: {expectedText})");
+
+        // Calculate pronunciation score (don't show raw transcription to user)
         float score = CalculatePronunciationScore(transcription, expectedText);
-        
-        // Show the result
+        Debug.Log($"Pronunciation Score: {score:F0}%");
+
+        // Show feedback based on score
         ShowPronunciationResult(score);
         
         isRecording = false;
@@ -707,17 +731,6 @@ public class TabletDisplay : MonoBehaviour
         {
             StopCoroutine(recordingTimeoutCoroutine);
             recordingTimeoutCoroutine = null;
-        }
-    }
-    
-    /// <summary>
-    /// Called when Wit.ai request is completed
-    /// </summary>
-    private void OnWitRequestCompleted(VoiceServiceRequest request)
-    {
-        if (isRecording)
-        {
-            isRecording = false;
         }
     }
     
@@ -736,19 +749,18 @@ public class TabletDisplay : MonoBehaviour
     private void OnRecordingError(string errorMessage)
     {
         isRecording = false;
-        
-        // Re-enable buttons
+
+        // Re-enable scanning
+        RightHandScanner.CanScan = true;
+
+        // Re-enable speak button
         SetButtonInteractable(speakButton, true);
-        SetButtonInteractable(GetPronunciationListenButton(), currentAudioClip != null);
-        
-        if (pronunciationStatusText != null)
-        {
-            pronunciationStatusText.text = "Error: " + errorMessage + ". Try again.";
-        }
-        
+
+        // Show error in sentence text
         if (sentenceText != null)
         {
-            sentenceText.text = "";
+            sentenceText.color = Color.red;
+            sentenceText.text = "Error - Try again";
         }
     }
     
@@ -832,61 +844,42 @@ public class TabletDisplay : MonoBehaviour
 
     /// <summary>
     /// Called when pronunciation is complete - shows the percentage result
-    /// After showing result, both listen and speak buttons remain available for repeated practice
-    /// The transcribed text should already be in sentenceText from UpdatePronunciationTranscription()
+    /// Simple one-liner: "Excellent! 90%"
     /// </summary>
     public void ShowPronunciationResult(float percentage)
     {
-        // Keep both buttons available for repeated practice
-        if (speakButton != null)
+        // Re-enable scanning
+        RightHandScanner.CanScan = true;
+
+        // Re-enable speak button for retry
+        SetButtonInteractable(speakButton, true);
+
+        // Determine feedback message and color based on percentage
+        string feedbackMessage;
+        Color feedbackColor;
+
+        if (percentage >= 80f)
         {
-            speakButton.gameObject.SetActive(true);
-            speakButton.interactable = true;
+            feedbackMessage = "Excellent!";
+            feedbackColor = Color.green;
+        }
+        else if (percentage >= 60f)
+        {
+            feedbackMessage = "Good!";
+            feedbackColor = Color.yellow;
+        }
+        else
+        {
+            feedbackMessage = "Try again!";
+            feedbackColor = Color.red;
         }
 
-        // Re-enable listen button
-        SetButtonInteractable(GetPronunciationListenButton(), currentAudioClip != null);
-
-        // Show percentage
-        if (pronunciationPercentageText != null)
+        // Show one-liner result: "Excellent! 90%"
+        if (sentenceText != null)
         {
-            pronunciationPercentageText.gameObject.SetActive(true);
-            pronunciationPercentageText.text = $"{percentage:F0}%";
-            
-            // Color code based on percentage
-            if (percentage < 60f)
-            {
-                pronunciationPercentageText.color = Color.red;
-            }
-            else if (percentage < 80f)
-            {
-                pronunciationPercentageText.color = Color.yellow;
-            }
-            else
-            {
-                pronunciationPercentageText.color = Color.green;
-            }
+            sentenceText.text = $"{feedbackMessage} {percentage:F0}%";
+            sentenceText.color = feedbackColor;
         }
-
-        // Update status text - encourage continued practice
-        if (pronunciationStatusText != null)
-        {
-            if (percentage >= 80f)
-            {
-                pronunciationStatusText.text = "Excellent! Listen again or practice more.";
-            }
-            else if (percentage >= 60f)
-            {
-                pronunciationStatusText.text = "Good! Try again for better score.";
-            }
-            else
-            {
-                pronunciationStatusText.text = "Keep practicing! Listen and try again.";
-            }
-        }
-        
-        // sentenceText already contains the transcribed text from Wit.ai
-        // It will remain visible showing what the user said
     }
 
     /// <summary>
@@ -961,11 +954,14 @@ public class TabletDisplay : MonoBehaviour
     // GAME FLOW INTEGRATION - Find Challenge & Cleaning Challenge
     // ============================================================================
 
-    [Header("Game Flow Panels")]
+    [Header("Challenge Prompt Panels")]
     public GameObject findChallengePromptPanel;
+    public GameObject findChallengeDeclineButton;
     public GameObject cleaningChallengePromptPanel;
+    public GameObject cleaningDeclineButton;
     public GameObject cleaningModePanel;
     public TextMeshProUGUI cleaningProgressText;
+    public TextMeshProUGUI cleaningItemsText;
     public TextMeshProUGUI messageText;
 
     private System.Action onFindChallengeAccept;
@@ -974,20 +970,22 @@ public class TabletDisplay : MonoBehaviour
     private System.Action onCleaningChallengeDecline;
 
     /// <summary>
-    /// Shows FindObjectQuiz challenge prompt at 50%
+    /// Shows FindObjectQuiz challenge prompt (15%, 30%, forced at 45%)
     /// </summary>
-    public void ShowFindChallengePrompt(System.Action onAccept, System.Action onDecline)
+    public void ShowFindChallengePrompt(System.Action onAccept, System.Action onDecline, bool forcePlay = false)
     {
         onFindChallengeAccept = onAccept;
         onFindChallengeDecline = onDecline;
 
         if (findChallengePromptPanel != null)
         {
-            // Hide scan layout
             if (scanLayout != null) scanLayout.SetActive(false);
             if (idleLayout != null) idleLayout.SetActive(false);
 
-            // Show find challenge prompt
+            // Hide decline button if forced
+            if (findChallengeDeclineButton != null)
+                findChallengeDeclineButton.SetActive(!forcePlay);
+
             findChallengePromptPanel.SetActive(true);
         }
     }
@@ -1009,15 +1007,16 @@ public class TabletDisplay : MonoBehaviour
     {
         if (findChallengePromptPanel != null)
             findChallengePromptPanel.SetActive(false);
-        // Restore scan layout
-        if (scanLayout != null) scanLayout.SetActive(true);
+
+        hasDeclinedChallenge = true;
+        SetState(TabletMode.Idle); // Return to idle with updated message
         onFindChallengeDecline?.Invoke();
     }
 
     /// <summary>
-    /// Shows Cleaning Challenge prompt at 90%
+    /// Shows Cleaning Challenge prompt (at 50%, keep offering until 100%)
     /// </summary>
-    public void ShowCleaningChallengePrompt(System.Action onAccept, System.Action onDecline)
+    public void ShowCleaningChallengePrompt(System.Action onAccept, System.Action onDecline, bool forcePlay = false)
     {
         onCleaningChallengeAccept = onAccept;
         onCleaningChallengeDecline = onDecline;
@@ -1027,6 +1026,10 @@ public class TabletDisplay : MonoBehaviour
             // Hide all other layouts
             if (scanLayout != null) scanLayout.SetActive(false);
             if (idleLayout != null) idleLayout.SetActive(false);
+
+            // Hide decline button if forced (at 100%)
+            if (cleaningDeclineButton != null)
+                cleaningDeclineButton.SetActive(!forcePlay);
 
             // Show cleaning challenge prompt
             cleaningChallengePromptPanel.SetActive(true);
@@ -1050,15 +1053,16 @@ public class TabletDisplay : MonoBehaviour
     {
         if (cleaningChallengePromptPanel != null)
             cleaningChallengePromptPanel.SetActive(false);
-        // Restore scan layout
-        if (scanLayout != null) scanLayout.SetActive(true);
+
+        hasDeclinedChallenge = true;
+        SetState(TabletMode.Idle); // Return to idle with updated message
         onCleaningChallengeDecline?.Invoke();
     }
 
     /// <summary>
-    /// Switches tablet to Cleaning Mode UI (shows progress only, no scan UI)
+    /// Switches tablet to Cleaning Mode UI (shows progress and item list)
     /// </summary>
-    public void EnterCleaningMode(int totalObjects)
+    public void EnterCleaningMode(int totalObjects, List<string> itemNames = null)
     {
         // Hide all normal layouts
         if (idleLayout != null) idleLayout.SetActive(false);
@@ -1071,6 +1075,12 @@ public class TabletDisplay : MonoBehaviour
             cleaningModePanel.SetActive(true);
             UpdateCleaningProgress(0, totalObjects);
         }
+
+        // Show items list (comma-separated, no articles)
+        if (cleaningItemsText != null && itemNames != null)
+        {
+            cleaningItemsText.text = string.Join(", ", itemNames);
+        }
     }
 
     /// <summary>
@@ -1080,8 +1090,23 @@ public class TabletDisplay : MonoBehaviour
     {
         if (cleaningProgressText != null)
         {
-            cleaningProgressText.text = $"Cleaned: {cleaned}/{total}";
+            cleaningProgressText.text = $"Sorted: {cleaned}/{total}";
         }
+    }
+
+    /// <summary>
+    /// Updates the items list with strikethrough for sorted items
+    /// </summary>
+    public void UpdateCleaningItemsList(List<string> allItems, HashSet<string> sortedItems)
+    {
+        if (cleaningItemsText == null || allItems == null) return;
+
+        var displayItems = allItems.Select(item =>
+            sortedItems.Contains(item)
+                ? $"<color=#FF6666><s>{item}</s></color>" // Red strikethrough for sorted
+                : item
+        );
+        cleaningItemsText.text = string.Join(", ", displayItems);
     }
 
     /// <summary>

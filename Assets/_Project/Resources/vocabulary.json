@@ -4,585 +4,540 @@
       "id": "cup-coffee",
       "article_only": "Die",
       "german": "Die Kaffeetasse",
-      "english": "The Coffee Cup",
-      "audioFileName": "cup-coffee",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cutting-board",
       "article_only": "Das",
       "german": "Das Schneidebrett",
-      "english": "The Cutting Board",
-      "audioFileName": "cutting-board",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "pan",
       "article_only": "Die",
       "german": "Die Pfanne",
-      "english": "The Pan",
-      "audioFileName": "pan",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "fish",
       "article_only": "Der",
       "german": "Der Fisch",
-      "english": "The Fish",
-      "audioFileName": "fish",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
+    },
+    {
+      "id": "apple",
+      "article_only": "Der",
+      "german": "Der Apfel",
+      "sentence": "",
+      "canSort": true
+    },
+    {
+      "id": "pineapple",
+      "article_only": "Die",
+      "german": "Die Ananas",
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "pot-stew",
       "article_only": "Der",
       "german": "Der Kochtopf",
-      "english": "The Stew Pot",
-      "audioFileName": "pot-stew",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "egg",
       "article_only": "Das",
       "german": "Das Ei",
-      "english": "The Egg",
-      "audioFileName": "egg",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cooking-knife",
       "article_only": "Das",
       "german": "Das Küchenmesser",
-      "english": "The Kitchen Knife",
-      "audioFileName": "cooking-knife",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "meat",
       "article_only": "Das",
       "german": "Das Fleisch",
-      "english": "The Meat",
-      "audioFileName": "meat",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "bratwurst",
       "article_only": "Die",
       "german": "Die Bratwurst",
-      "english": "The Bratwurst",
-      "audioFileName": "bratwurst",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "fries",
       "article_only": "Die",
       "german": "Die Pommes",
-      "english": "The Fries",
-      "audioFileName": "fries",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "can",
       "article_only": "Die",
       "german": "Die Dose",
-      "english": "The Can",
-      "audioFileName": "can",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "ketchup",
       "article_only": "Das",
       "german": "Das Ketchup",
-      "english": "The Ketchup",
-      "audioFileName": "ketchup",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "mustard",
       "article_only": "Der",
       "german": "Der Senf",
-      "english": "The Mustard",
-      "audioFileName": "mustard",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "knife-block",
       "article_only": "Der",
       "german": "Der Messerblock",
-      "english": "The Knife Block",
-      "audioFileName": "knife-block",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "bottle-oil",
       "article_only": "Das",
       "german": "Das Öl",
-      "english": "The Oil",
-      "audioFileName": "bottle-oil",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "fork",
       "article_only": "Die",
       "german": "Die Gabel",
-      "english": "The Fork",
-      "audioFileName": "fork",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "knife",
       "article_only": "Das",
       "german": "Das Messer",
-      "english": "The Knife",
-      "audioFileName": "knife",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "tomato",
       "article_only": "Die",
       "german": "Die Tomate",
-      "english": "The Tomato",
-      "audioFileName": "tomato",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "onion",
       "article_only": "Die",
       "german": "Die Zwiebel",
-      "english": "The Onion",
-      "audioFileName": "onion",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "orange",
       "article_only": "Die",
       "german": "Die Orange",
-      "english": "The Orange",
-      "audioFileName": "orange",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "lemon",
       "article_only": "Die",
       "german": "Die Zitrone",
-      "english": "The Lemon",
-      "audioFileName": "lemon",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cake-birthday",
       "article_only": "Der",
       "german": "Der Geburtstagskuchen",
-      "english": "The Birthday Cake",
-      "audioFileName": "cake-birthday",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "paprika",
       "article_only": "Die",
       "german": "Die Paprika",
-      "english": "The Paprika",
-      "audioFileName": "paprika",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "turkey",
       "article_only": "Der",
       "german": "Der Truthahn",
-      "english": "The Turkey",
-      "audioFileName": "turkey",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "plate",
       "article_only": "Der",
       "german": "Der Teller",
-      "english": "The Plate",
-      "audioFileName": "plate",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "microwave",
       "article_only": "Die",
       "german": "Die Mikrowelle",
-      "english": "The Microwave",
-      "audioFileName": "microwave",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "coffee-machine",
       "article_only": "Die",
       "german": "Die Kaffeemaschine",
-      "english": "The Coffee Machine",
-      "audioFileName": "coffee-machine",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "oven",
       "article_only": "Der",
       "german": "Der Ofen",
-      "english": "The Oven",
-      "audioFileName": "oven",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "toaster",
       "article_only": "Der",
       "german": "Der Toaster",
-      "english": "The Toaster",
-      "audioFileName": "toaster",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cake",
       "article_only": "Der",
       "german": "Der Kuchen",
-      "english": "The Cake",
-      "audioFileName": "cake",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "bowl",
       "article_only": "Die",
       "german": "Die Schüssel",
-      "english": "The Bowl",
-      "audioFileName": "bowl",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "spoon",
       "article_only": "Der",
       "german": "Der Löffel",
-      "english": "The Spoon",
-      "audioFileName": "spoon",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "kitchen-table",
       "article_only": "Der",
       "german": "Der Esstisch",
-      "english": "The Dining Table",
-      "audioFileName": "kitchen-table",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "fridge",
       "article_only": "Der",
       "german": "Der Kühlschrank",
-      "english": "The Fridge",
-      "audioFileName": "fridge",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "freezer",
       "article_only": "Das",
       "german": "Das Kühlfach",
-      "english": "The Freezer",
-      "audioFileName": "freezer",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "salt-shaker",
       "article_only": "Der",
       "german": "Der Salzstreuer",
-      "english": "The Salt Shaker",
-      "audioFileName": "salt-shaker",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "pepper-shaker",
       "article_only": "Der",
       "german": "Der Pfefferstreuer",
-      "english": "The Pepper Shaker",
-      "audioFileName": "pepper-shaker",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "extractor-hood",
       "article_only": "Die",
       "german": "Die Abdunsthaube",
-      "english": "The Extractor Hood",
-      "audioFileName": "extractor-hood",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "spatula-baking",
       "article_only": "Der",
       "german": "Der Teigschaber",
-      "english": "The Dough Scraper",
-      "audioFileName": "spatula-baking",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "spatula-cooking",
       "article_only": "Der",
       "german": "Der Pfannenwender",
-      "english": "The Spatula",
-      "audioFileName": "spatula-cooking",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cup",
       "article_only": "Die",
       "german": "Die Tasse",
-      "english": "The Cup",
-      "audioFileName": "cup",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "broccoli",
       "article_only": "Der",
       "german": "Der Brokkoli",
-      "english": "The Broccoli",
-      "audioFileName": "broccoli",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "cupcake",
       "article_only": "Der",
       "german": "Der Muffin",
-      "english": "The Muffin",
-      "audioFileName": "cupcake",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "ice-cream",
       "article_only": "Das",
       "german": "Das Eis",
-      "english": "The Ice Cream",
-      "audioFileName": "ice-cream",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "pumpkin",
       "article_only": "Der",
       "german": "Der Kürbis",
-      "english": "The Pumpkin",
-      "audioFileName": "pumpkin",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "watermelone",
       "article_only": "Die",
       "german": "Die Melone",
-      "english": "The Melon",
-      "audioFileName": "watermelone",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "sandwich",
       "article_only": "Das",
       "german": "Das Sandwich",
-      "english": "The Sandwich",
-      "audioFileName": "sandwich",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "radish",
       "article_only": "Das",
       "german": "Das Radieschen",
-      "english": "The Radish",
-      "audioFileName": "radish",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "coconut",
       "article_only": "Die",
       "german": "Die Kokosnuss",
-      "english": "The Coconut",
-      "audioFileName": "coconut",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "chocolate-bar",
       "article_only": "Die",
       "german": "Die Schokoladentafel",
-      "english": "The Chocolate Bar",
-      "audioFileName": "chocolate-bar",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "stool",
       "article_only": "Der",
       "german": "Der Hocker",
-      "english": "The Stool",
-      "audioFileName": "stool",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "table-lamp",
       "article_only": "Die",
       "german": "Die Tischlampe",
-      "english": "The Table Lamp",
-      "audioFileName": "table-lamp",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "plant",
       "article_only": "Die",
       "german": "Die Pflanze",
-      "english": "The Plant",
-      "audioFileName": "plant",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "wall-clock",
       "article_only": "Die",
       "german": "Die Wanduhr",
-      "english": "The Wall Clock",
-      "audioFileName": "wall-clock",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "vase",
       "article_only": "Die",
       "german": "Die Vase",
-      "english": "The Vase",
-      "audioFileName": "vase",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "air-conditioner",
       "article_only": "Die",
       "german": "Die Klimaanlage",
-      "english": "The Air Conditioner",
-      "audioFileName": "air-conditioner",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "book",
       "article_only": "Das",
       "german": "Das Buch",
-      "english": "The Book",
-      "audioFileName": "book",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "gramophone",
       "article_only": "Das",
       "german": "Das Grammofon",
-      "english": "The Gramophone",
-      "audioFileName": "gramophone",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "picture",
       "article_only": "Das",
       "german": "Das Bild",
-      "english": "The Picture",
-      "audioFileName": "picture",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "side-table",
       "article_only": "Der",
       "german": "Der Beistelltisch",
-      "english": "The Side Table",
-      "audioFileName": "side-table",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "rolling-pin",
       "article_only": "Das",
       "german": "Das Nudelholz",
-      "english": "The Rolling Pin",
-      "audioFileName": "rolling-pin",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "teapot",
       "article_only": "Die",
       "german": "Die Teekanne",
-      "english": "The Teapot",
-      "audioFileName": "teapot",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "broom",
       "article_only": "Der",
       "german": "Der Besen",
-      "english": "The Broom",
-      "audioFileName": "broom",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "rug",
       "article_only": "Der",
       "german": "Der Teppich",
-      "english": "The Rug",
-      "audioFileName": "rug",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "trash-can",
       "article_only": "Der",
       "german": "Der Mülleimer",
-      "english": "The Trash Can",
-      "audioFileName": "trash-can",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "box",
       "article_only": "Die",
       "german": "Die Kiste",
-      "english": "The Box",
-      "audioFileName": "box",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "beer",
       "article_only": "Das",
       "german": "Das Bier",
-      "english": "The Beer",
-      "audioFileName": "beer",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "salt",
       "article_only": "Das",
       "german": "Das Salz",
-      "english": "The Salt",
-      "audioFileName": "salt",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "extractor",
       "article_only": "Die",
       "german": "Die Dunstabzugshaube",
-      "english": "The Extractor Hood",
-      "audioFileName": "extractor",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
     },
     {
       "id": "potato",
       "article_only": "Die",
       "german": "Die Kartoffel",
-      "english": "The Potato",
-      "audioFileName": "potato",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "jar",
       "article_only": "Das",
       "german": "Das Glas",
-      "english": "The Jar",
-      "audioFileName": "jar",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "beaker",
       "article_only": "Der",
       "german": "Der Becher",
-      "english": "The Beaker",
-      "audioFileName": "beaker",
-      "sentence": ""
+      "sentence": "",
+      "canSort": true
     },
     {
       "id": "ladder",
       "article_only": "Die",
       "german": "Die Leiter",
-      "english": "The Ladder",
-      "audioFileName": "ladder",
-      "sentence": ""
+      "sentence": "",
+      "canSort": false
+    },
+    {
+      "id": "cube",
+      "article_only": "Der",
+      "german": "Der Würfel",
+      "sentence": "",
+      "canSort": true
+    },
+    {
+      "id": "milk",
+      "article_only": "Die",
+      "german": "Die Milch",
+      "sentence": "",
+      "canSort": true
     }
   ]
 }

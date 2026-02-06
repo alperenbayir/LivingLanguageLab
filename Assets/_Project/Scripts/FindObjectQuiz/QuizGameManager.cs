@@ -33,9 +33,12 @@ public class QuizGameManager : MonoBehaviour
     public Color correctColor = Color.green;
     public Color penaltyColor = Color.red;
 
-    // --- Music ---
+    // --- Audio ---
     [Header("Audio")]
-    public AudioSource challengeMusicSource; // M�zik kayna�� buraya
+    public AudioSource audioSource;
+    public AudioSource challengeMusicSource;
+    public AudioClip correctSound;
+    public AudioClip wrongSound;
     public bool IsGameActive { get; private set; } = false;
     private float currentTime = 0f;
     private List<ItemData> questionQueue = new List<ItemData>();
@@ -182,19 +185,21 @@ public class QuizGameManager : MonoBehaviour
             currentTime -= 2f;
             if (currentTime < 0) currentTime = 0;
             StartCoroutine(ShowFeedback("Correct! (-2 sec)", correctColor));
-            
+
             // Play correct sound
-            RightHandScanner.Instance?.PlayFeedbackSound(true);
-            
+            if (audioSource != null && correctSound != null)
+                audioSource.PlayOneShot(correctSound);
+
             AskNextQuestion();
         }
         else
         {
             currentTime += 5f;
             StartCoroutine(ShowFeedback("Wrong! (+5 sec)", penaltyColor));
-            
+
             // Play wrong sound
-            RightHandScanner.Instance?.PlayFeedbackSound(false);
+            if (audioSource != null && wrongSound != null)
+                audioSource.PlayOneShot(wrongSound);
         }
     }
 
@@ -440,13 +445,19 @@ public class QuizGameManager : MonoBehaviour
     void ShowPanel(GameObject panelToShow)
     {
         Debug.Log($"[QuizGameManager] ShowPanel called: {(panelToShow != null ? panelToShow.name : "NULL (hide all)")}");
-        
+
+        // Ensure parent is active (common issue when parent starts disabled)
+        if (panelToShow != null && panelToShow.transform.parent != null)
+        {
+            panelToShow.transform.parent.gameObject.SetActive(true);
+        }
+
         if (startPanel) startPanel.SetActive(false);
         if (gamePanel) gamePanel.SetActive(false);
         if (inputPanel) inputPanel.SetActive(false);
         if (endPanel) endPanel.SetActive(false);
 
-        if (panelToShow) 
+        if (panelToShow)
         {
             panelToShow.SetActive(true);
             Debug.Log($"[QuizGameManager] Panel {panelToShow.name} is now ACTIVE");

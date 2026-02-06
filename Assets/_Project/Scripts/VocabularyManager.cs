@@ -7,9 +7,8 @@ public class ItemData
     public string id;
     public string article_only;
     public string german;
-    public string english;
-    public string audioFileName;
     public string sentence;
+    public bool canSort = true;
 }
 
 [System.Serializable]
@@ -64,5 +63,14 @@ public class VocabularyManager : MonoBehaviour
             return database[id];
 
         return null;
+    }
+
+    /// <summary>
+    /// Check if an item can be sorted in the article sorting challenge
+    /// </summary>
+    public bool CanSort(string id)
+    {
+        ItemData item = GetItem(id);
+        return item != null && item.canSort;
     }
 }
