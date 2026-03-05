@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,11 +14,11 @@ public class GameFlowController : MonoBehaviour
     public static GameFlowController Instance;
 
     [Header("Phase Settings - Find Game")]
-    public float[] findChallengeMilestones = { 0.15f, 0.30f, 0.45f }; // 15%, 30%, 45% (forced at 45%)
-    public int requiredFindChallenges = 1; // Must complete at least 1 before Article Sorting
+    private float[] findChallengeMilestones = { 0.10f, 0.15f, 0.20f };
+    private int requiredFindChallenges = 0;
 
     [Header("Phase Settings - Article Sorting")]
-    public float[] cleaningMilestones = { 0.70f, 1.0f }; // 70% optional, 100% forced
+    private float[] cleaningMilestones = { 0.0f, 0.40f };
 
     [Header("Highlight Settings")]
     public Color highlightColor = new Color(0.3f, 1f, 0.3f, 1f); // Subtle green glow
@@ -25,11 +26,11 @@ public class GameFlowController : MonoBehaviour
     public float highlightIntensity = 0.1f; // Keep it subtle
 
     [Header("FindObject Challenge Settings")]
-    public int findChallengeItemCount = 10; // Always 10 items per challenge
+    private int findChallengeItemCount = 10;
     public bool findChallengeTimed = true;
 
     [Header("Article Sorting Challenge Settings")]
-    public int cleaningObjectCount = 20; // 20 words per round
+    private int cleaningObjectCount = 5;
     public Transform cleaningSpawnArea; // Area to gather objects initially
 
     [Header("Audio")]
@@ -437,27 +438,23 @@ public class GameFlowController : MonoBehaviour
         EndChallengeAtmosphere();
         RightHandScanner.CanScan = true;
 
-        // Check if game is fully complete (at 100% or no more milestones)
-        bool isGameComplete = currentCleaningMilestoneIndex >= cleaningMilestones.Length;
-
-        if (isGameComplete)
-        {
-            currentPhase = GamePhase.Complete;
-            tabletDisplay.ShowCleaningComplete();
-            Invoke(nameof(ReturnToMainMenu), 5f);
-        }
-        else
-        {
-            // Return to exploration for more progress
-            currentPhase = GamePhase.Exploration;
-            tabletDisplay.ReturnToExplorationMode();
-            tabletDisplay.ShowMessage($"Great job! {globallySortedItemIDs.Count} items sorted.\nKeep exploring!");
-        }
+        currentPhase = GamePhase.Complete;
+        tabletDisplay.ShowCleaningComplete();
+        StartCoroutine(FoodComboCountdown());
     }
 
-    void ReturnToMainMenu()
+    IEnumerator FoodComboCountdown()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        if (tabletDisplay.transitionUI != null)
+            tabletDisplay.transitionUI.SetActive(true);
+
+        for (int i = 5; i >= 1; i--)
+        {
+            if (tabletDisplay.timeCountdownText != null)
+                tabletDisplay.timeCountdownText.text = $"Starting in {i}..";
+            yield return new WaitForSeconds(1f);
+        }
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Kitchen_FoodComboGame");
     }
 
     #endregion

@@ -20,6 +20,10 @@ public class TabletDisplay : MonoBehaviour
     public GameObject scanLayout;
     public TextMeshProUGUI idleMessageText; // Dynamic idle message
 
+    [Header("Transition UI")]
+    public GameObject transitionUI;
+    public TextMeshProUGUI timeCountdownText;
+
     // ============================================================================
     // UI ELEMENTS
     // ============================================================================

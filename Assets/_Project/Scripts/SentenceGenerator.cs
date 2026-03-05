@@ -6,8 +6,29 @@ using System.Text;
 
 public class SentenceGenerator : MonoBehaviour
 {
-    private const string OLLAMA_URL = "http://localhost:11434/api/generate";
-   
+    private const string OLLAMA_URL = "http://192.168.178.38:11434/api/generate";
+    private const string MODEL = "gemma2:2b";
+
+    void Start()
+    {
+        StartCoroutine(WarmUp());
+    }
+
+    private IEnumerator WarmUp()
+    {
+        string jsonBody = $"{{\"model\":\"{MODEL}\",\"prompt\":\"hi\",\"stream\":false}}";
+        byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
+
+        using (UnityWebRequest request = new UnityWebRequest(OLLAMA_URL, "POST"))
+        {
+            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+            request.downloadHandler = new DownloadHandlerBuffer();
+            request.SetRequestHeader("Content-Type", "application/json");
+            request.timeout = 30;
+            yield return request.SendWebRequest();
+            Debug.Log("[SentenceGenerator] Model warm-up complete.");
+        }
+    }
 
     // We use a "Callback" (Action<string>) to return the result when done
     public void RequestSentence(WordItem item, System.Action<string> onComplete)
@@ -27,18 +48,16 @@ public class SentenceGenerator : MonoBehaviour
             avoidContext = $" Vermeide diese S�tze: {joinedHistory}.";
         }
 
-        // 2. Build Prompt (Compressed to single line for valid JSON)
-        string promptText = $"Create a simple full German sentence (A1 level) in a kitchen context using '{item.germanWord}'. " +
-                            $"Max 5 words. Use Subject-Verb-Object. " +
-                            $"STRICTLY GERMAN ONLY. NO ENGLISH TRANSLATION. Output only the raw sentence. " +
-                            $"Avoid: {avoidContext}";
+        // Strip article from german word (e.g. "Die Pflanze" -> "Pflanze") for cleaner prompt
+        string wordOnly = item.germanWord.Contains(" ")
+            ? item.germanWord.Substring(item.germanWord.IndexOf(' ') + 1)
+            : item.germanWord;
+
+        // 2. Build Prompt
+        string promptText = $"Reply with exactly one complete German A1 sentence (subject + verb) using '{wordOnly}'. Plain text only, no markdown, no asterisks. Max 8 words.{avoidContext}";
+
         // 3. Prepare JSON
-        string jsonBody = $@"
-        {{
-            ""model"": ""llama3.1:8b"",
-            ""prompt"": ""{promptText}"",
-            ""stream"": false
-        }}";
+        string jsonBody = $"{{\"model\":\"{MODEL}\",\"prompt\":\"{promptText}\",\"stream\":false}}";
 
         byte[] bodyRaw = Encoding.UTF8.GetBytes(jsonBody);
 
@@ -48,6 +67,7 @@ public class SentenceGenerator : MonoBehaviour
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            request.timeout = 30;
 
             yield return request.SendWebRequest();
 
@@ -55,7 +75,10 @@ public class SentenceGenerator : MonoBehaviour
             {
                 // Parse Response
                 OllamaResponse result = JsonUtility.FromJson<OllamaResponse>(request.downloadHandler.text);
-                string finalSentence = result.response.Trim();
+                // Take only the first line/sentence to strip any extra explanation the model adds
+                string raw = result.response.Trim();
+                string finalSentence = raw.Split('\n')[0].Trim()
+                    .Replace("**", "").Replace("*", "").Replace("_", "").Trim();
 
                 // Save to History
                 SentenceHistoryManager.AddHistory(item.objectID, finalSentence);

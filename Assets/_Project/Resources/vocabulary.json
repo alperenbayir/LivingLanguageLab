@@ -524,20 +524,6 @@
       "german": "Die Leiter",
       "sentence": "",
       "canSort": false
-    },
-    {
-      "id": "cube",
-      "article_only": "Der",
-      "german": "Der Würfel",
-      "sentence": "",
-      "canSort": true
-    },
-    {
-      "id": "milk",
-      "article_only": "Die",
-      "german": "Die Milch",
-      "sentence": "",
-      "canSort": true
     }
   ]
 }

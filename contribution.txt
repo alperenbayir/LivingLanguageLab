@@ -1,0 +1,27 @@
+Contribution Statement - Cem
+Living Language Lab - Human AI/Computer Interaction Fachprojekt
+================================================================
+
+1. Concept & Game Design
+   - Involved in initial concept development, game design decisions, and defining the 3-phase gameplay loop
+
+2. Scene Unification & Core Architecture
+   - Unified all minigames and core mechanics into a single Kitchen scene — the existing games were separate scene prototypes copying the kitchen scene, so I rebuilt and finalized everything into one cohesive game
+   - Implemented the full progression logic and game flow (GameFlowController), defining how the Kitchen scene transitions between exploration, find challenge, and cleaning challenge phases
+   - Polished the FindObjectQuizGame and ArticleCleaningGame, integrating them with preexisting object detection
+   - Fixed colliders for the basket game to ensure correct collision detection and grabbing
+   - Implemented the scan mechanic and WordItem mechanics for object scanning and vocabulary interaction
+   - Configured the tablet UI to work within the unified scene
+
+3. Kitchen Scene & VR Environment
+   - Built and organized the main kitchen scene, arranged 50+ food and kitchen assets, implemented interactive fridge/drawer mechanics with VR grab interactions, final testing on Quest 3
+
+4. Tablet UI System
+   - Replaced the flat UI panel with an in-game tablet for better immersion, designed and implemented tablet states and corresponding layouts, implemented listen button for audio playback, added progress counter for discovered words
+
+5. Data & Audio Pipeline
+   - Refactored vocabulary.json structure, added German pronunciation audio files (mp3), expanded the vocabulary database with new items
+   - Added sentence history tracking for LLM sentence generation to prevent duplicate generated sentences
+
+6. Team Coordination
+   - Informally distributed tasks and coordinated work among team members throughout the project
