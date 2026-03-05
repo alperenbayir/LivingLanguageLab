@@ -524,6 +524,13 @@
       "german": "Die Leiter",
       "sentence": "",
       "canSort": false
+    },
+    {
+      "id": "pizza",
+      "article_only": "Die",
+      "german": "Die Pizza",
+      "sentence": "",
+      "canSort": false
     }
   ]
 }
