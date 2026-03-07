@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f7d1d0dfe55d4e849577ea6564d994e, type: 3}
   m_Name: Recipe_Pizza
   m_EditorClassIdentifier: Assembly-CSharp::OvenRecipe
-  requiredIDs: []
-  resultPrefab: {fileID: 0}
+  requiredIDs:
+  - bread
+  - cheese
+  - tomato
+  resultPrefab: {fileID: 3579975570502267339, guid: 32d4e9bba2c2642dc8a9372436865625, type: 3}
   consumeRequiredItems: 1
   requireExactCounts: 0
   requiredCounts: 

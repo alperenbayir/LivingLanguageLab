@@ -14,11 +14,11 @@ public class GameFlowController : MonoBehaviour
     public static GameFlowController Instance;
 
     [Header("Phase Settings - Find Game")]
-    private float[] findChallengeMilestones = { 0.10f, 0.15f, 0.20f };
-    private int requiredFindChallenges = 0;
+    private float[] findChallengeMilestones = { 0.067f, 0.20f }; // ~5 scans, ~15 scans (out of 75)
+    private int requiredFindChallenges = 1;
 
     [Header("Phase Settings - Article Sorting")]
-    private float[] cleaningMilestones = { 0.0f, 0.40f };
+    private float[] cleaningMilestones = { 0.27f }; // ~20 scans (out of 75)
 
     [Header("Highlight Settings")]
     public Color highlightColor = new Color(0.3f, 1f, 0.3f, 1f); // Subtle green glow
@@ -26,11 +26,11 @@ public class GameFlowController : MonoBehaviour
     public float highlightIntensity = 0.1f; // Keep it subtle
 
     [Header("FindObject Challenge Settings")]
-    private int findChallengeItemCount = 10;
+    private int findChallengeItemCount = 8;
     public bool findChallengeTimed = true;
 
     [Header("Article Sorting Challenge Settings")]
-    private int cleaningObjectCount = 5;
+    private int cleaningObjectCount = 6;
     public Transform cleaningSpawnArea; // Area to gather objects initially
 
     [Header("Audio")]
@@ -84,7 +84,7 @@ public class GameFlowController : MonoBehaviour
     }
 
     [Header("Debug")]
-    public bool debugSkipToSorting = false; // Enable in Inspector to skip to sorting challenge
+    [HideInInspector] public bool debugSkipToSorting = false;
 
     void Start()
     {

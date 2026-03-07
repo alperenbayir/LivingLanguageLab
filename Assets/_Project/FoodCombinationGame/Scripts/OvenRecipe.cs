@@ -10,6 +10,9 @@ public class OvenRecipe : ScriptableObject
     [Tooltip("Prefab to spawn when recipe matches")]
     public GameObject resultPrefab;
 
+    [Tooltip("ID of the result item (must match vocabulary.json id, e.g. 'pizza')")]
+    public string resultID;
+
     [Tooltip("If true: consume ONLY the required items. If false: do not consume anything.")]
     public bool consumeRequiredItems = true;
 

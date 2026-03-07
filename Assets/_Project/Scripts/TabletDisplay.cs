@@ -19,6 +19,7 @@ public class TabletDisplay : MonoBehaviour
     public GameObject idleLayout;
     public GameObject scanLayout;
     public TextMeshProUGUI idleMessageText; // Dynamic idle message
+    public bool startInScanMode = false; // Enable in food combo scene
 
     [Header("Transition UI")]
     public GameObject transitionUI;
@@ -107,8 +108,9 @@ public class TabletDisplay : MonoBehaviour
 
         nextTargetRatio = startPercentage;
 
-        //Start in idle mode
-        SetState(TabletMode.Idle);
+        //Start in idle or scan mode depending on scene
+        SetState(startInScanMode ? TabletMode.Scanning : TabletMode.Idle);
+        if (startInScanMode && scanLayout != null) scanLayout.SetActive(true);
         
         // Find AppVoiceExperience at runtime (from VoiceManager GameObject)
         FindVoiceExperience();
@@ -209,6 +211,7 @@ public class TabletDisplay : MonoBehaviour
 
             case TabletMode.Scanning:
                 if (scanLayout) scanLayout.SetActive(true);
+                else Debug.LogError("[TabletDisplay] scanLayout is NULL — assign it in the Inspector!");
                 // Show scan mode elements
                 ShowScanModeElements();
                 break;

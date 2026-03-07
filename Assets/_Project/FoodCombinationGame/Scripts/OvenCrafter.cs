@@ -54,7 +54,10 @@ public class OvenCrafter : MonoBehaviour
             var rb = currentResultInstance.GetComponent<Rigidbody>();
             if (rb) rb.isKinematic = true;
 
-            FoodComboUIManager.Instance?.ShowScanPrompt();
+            if (match.resultID == "pizza")
+                FoodComboUIManager.Instance?.OnPizzaCrafted();
+            else
+                FoodComboUIManager.Instance?.ShowScanPrompt();
         }
         else
         {

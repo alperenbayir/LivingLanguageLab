@@ -30,6 +30,7 @@ public class RightHandScanner : MonoBehaviour
     void Awake()
     {
         Instance = this;
+        CanScan = true; // Reset on every scene load since this is a static field
     }
     
     void Start()
@@ -103,6 +104,9 @@ public class RightHandScanner : MonoBehaviour
                     {
                         Debug.Log($"[Learn] Displaying: {item.objectID}");
                         tablet.UpdateDisplay(item);
+
+                        if (item.objectID == "pizza")
+                            FoodComboUIManager.Instance?.OnPizzaScanned();
                     }
 
                     return; // Stop after first found

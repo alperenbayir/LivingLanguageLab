@@ -531,6 +531,27 @@
       "german": "Die Pizza",
       "sentence": "",
       "canSort": false
+    },
+    {
+      "id": "bread",
+      "article_only": "Das",
+      "german": "Das Brot",
+      "sentence": "",
+      "canSort": false
+    },
+    {
+      "id": "cheese",
+      "article_only": "Der",
+      "german": "Der Käse",
+      "sentence": "",
+      "canSort": false
+    },
+    {
+      "id": "tomato",
+      "article_only": "Die",
+      "german": "Die Tomate",
+      "sentence": "",
+      "canSort": false
     }
   ]
 }
