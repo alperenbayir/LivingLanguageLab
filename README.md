@@ -3,6 +3,8 @@
 VR game for learning German vocabulary, built in Unity 6 for the Meta Quest 3.
 Fachprojekt at TU Dortmund, four students, one semester.
 
+![The find-object challenge: the prompt and timer on the tablet, and the leaderboard](docs/preview.jpg)
+
 ## Aim
 
 Vocabulary learning usually means memorising abstract word lists, disconnected from the things they
