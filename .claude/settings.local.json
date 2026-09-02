@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python3:*)",
-      "Bash(git -C \"C:/Projects/LivingLanguageLab\" log --all --author=\"Cem\" --format=\"%h %ad %s\" --date=short)",
-      "Bash(git -C \"C:/Projects/LivingLanguageLab\" shortlog --all -s -n)"
-    ]
-  }
-}
