@@ -3,6 +3,12 @@
 VR game for learning German vocabulary, built in Unity 6 for the Meta Quest 3.
 Fachprojekt at TU Dortmund, four students, one semester.
 
+## Aim
+
+Vocabulary learning usually means memorising abstract word lists, disconnected from the things they
+describe. We wanted to test situated learning instead — look at a real object, learn the word and
+hear it spoken, then practise it in context.
+
 Scan an object in a virtual kitchen and the tablet you carry shows the German word with its
 article and translation, plays the pronunciation, and lets you try saying it back. Four
 minigames build on the vocabulary you have collected.
